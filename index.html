@@ -3,16 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Keuangan Pribadi</title>
+    <title>KeuanganKu - Cloud Sync</title>
     <!-- Memuat Tailwind CSS untuk styling -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Memuat Alpine.js untuk reaktivitas data (seperti rumus di Excel) -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
     <!-- Memuat Font Awesome untuk icon -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <script>
-        // Konfigurasi Tailwind untuk warna kustom
+        // Konfigurasi Tailwind
         tailwind.config = {
             theme: {
                 extend: {
@@ -26,534 +24,459 @@
             }
         }
         
-        // Fungsi untuk format mata uang Rupiah
+        // Fungsi utilitas mata uang
         const formatRupiah = (number) => {
             return new Intl.NumberFormat('id-ID', {
-                style: 'currency',
-                currency: 'IDR',
-                minimumFractionDigits: 0
-            }).format(number);
+                style: 'currency', currency: 'IDR', minimumFractionDigits: 0
+            }).format(number || 0);
         };
     </script>
+    <style>
+        [x-cloak] { display: none !important; }
+        .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+    </style>
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans antialiased min-h-screen" 
-      x-data="keuanganApp()">
+<body class="bg-gray-50 text-gray-800 font-sans antialiased min-h-screen flex flex-col" x-data="keuanganApp()">
 
-    <!-- Navbar -->
-    <nav class="bg-primary text-white shadow-md sticky top-0 z-10">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16 items-center">
-                <div class="flex items-center gap-2">
-                    <i class="fas fa-wallet text-2xl"></i>
-                    <span class="font-bold text-xl tracking-wide">KeuanganKu</span>
+    <!-- Layar Peringatan Setup Firebase (Hanya Muncul jika Config belum diisi) -->
+    <div x-show="authState === 'setup_required'" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-gray-100 p-4">
+        <div class="bg-white p-8 rounded-2xl shadow-xl max-w-2xl w-full border-t-4 border-red-500">
+            <h2 class="text-2xl font-bold text-red-600 mb-4"><i class="fas fa-exclamation-triangle mr-2"></i>Konfigurasi Database Diperlukan!</h2>
+            <p class="text-gray-700 mb-4">Karena Anda mengaktifkan fitur <b>Login & Simpan Cloud</b>, Anda perlu menghubungkan aplikasi ini ke database gratis (Firebase).</p>
+            <ol class="list-decimal pl-5 text-sm text-gray-600 space-y-2 mb-6">
+                <li>Buka <a href="https://console.firebase.google.com/" target="_blank" class="text-blue-500 underline font-bold">Firebase Console</a> dan buat Project baru.</li>
+                <li>Tambahkan aplikasi Web (ikon &lt;/&gt;) ke project Anda.</li>
+                <li>Aktifkan <b>Authentication</b> (Pilih Email/Password).</li>
+                <li>Aktifkan <b>Firestore Database</b> (Mulai dalam Test Mode).</li>
+                <li>Salin kode <code>firebaseConfig</code> yang diberikan Firebase, lalu cari bagian <b>"KONFIGURASI FIREBASE ANDA DI SINI"</b> di dalam file HTML ini (sekitar baris paling bawah) dan ganti kodenya.</li>
+                <li>Simpan file dan upload kembali ke GitHub!</li>
+            </ol>
+            <p class="text-xs text-gray-400">Pesan ini akan hilang otomatis setelah konfigurasi diisi dengan benar.</p>
+        </div>
+    </div>
+
+    <!-- Layar Loading -->
+    <div x-show="authState === 'loading'" x-cloak class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gray-50">
+        <div class="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p class="text-gray-500 font-medium">Memuat sistem keuangan...</p>
+    </div>
+
+    <!-- Layar Autentikasi (Login / Register) -->
+    <div x-show="authState === 'unauthenticated'" x-cloak class="fixed inset-0 z-40 flex items-center justify-center bg-gradient-to-br from-blue-50 to-gray-100 p-4">
+        <div class="glass-panel p-8 rounded-2xl shadow-xl max-w-md w-full">
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-100 text-primary rounded-full mb-4 text-3xl">
+                    <i class="fas fa-wallet"></i>
                 </div>
-                <div class="flex gap-4">
-                    <button @click="activeTab = 'dashboard'" :class="{'bg-blue-700': activeTab === 'dashboard'}" class="px-3 py-2 rounded-md font-medium hover:bg-blue-600 transition hidden sm:inline-block">Dashboard</button>
-                    <button @click="activeTab = 'dashboard'" :class="{'bg-blue-700': activeTab === 'dashboard'}" class="px-3 py-2 rounded-md font-medium hover:bg-blue-600 transition sm:hidden"><i class="fas fa-home"></i></button>
-                    
-                    <button @click="activeTab = 'transaksi'" :class="{'bg-blue-700': activeTab === 'transaksi'}" class="px-3 py-2 rounded-md font-medium hover:bg-blue-600 transition hidden sm:inline-block">Transaksi</button>
-                    <button @click="activeTab = 'transaksi'" :class="{'bg-blue-700': activeTab === 'transaksi'}" class="px-3 py-2 rounded-md font-medium hover:bg-blue-600 transition sm:hidden"><i class="fas fa-exchange-alt"></i></button>
-                    
-                    <button @click="activeTab = 'investasi'" :class="{'bg-blue-700': activeTab === 'investasi'}" class="px-3 py-2 rounded-md font-medium hover:bg-blue-600 transition hidden sm:inline-block">Investasi</button>
-                    <button @click="activeTab = 'investasi'" :class="{'bg-blue-700': activeTab === 'investasi'}" class="px-3 py-2 rounded-md font-medium hover:bg-blue-600 transition sm:hidden"><i class="fas fa-chart-line"></i></button>
-                    
-                    <button @click="activeTab = 'rencana'" :class="{'bg-blue-700': activeTab === 'rencana'}" class="px-3 py-2 rounded-md font-medium hover:bg-blue-600 transition hidden sm:inline-block">Rencana</button>
-                    <button @click="activeTab = 'rencana'" :class="{'bg-blue-700': activeTab === 'rencana'}" class="px-3 py-2 rounded-md font-medium hover:bg-blue-600 transition sm:hidden"><i class="fas fa-list-check"></i></button>
+                <h1 class="text-2xl font-bold text-gray-800" x-text="isLoginMode ? 'Selamat Datang Kembali' : 'Buat Akun KeuanganKu'"></h1>
+                <p class="text-gray-500 text-sm mt-2">Simpan data keuangan Anda dengan aman di Cloud.</p>
+            </div>
+
+            <div x-show="authError" class="bg-red-50 text-red-600 p-3 rounded-lg text-sm mb-4 border border-red-200" x-text="authError"></div>
+
+            <form @submit.prevent="handleAuth">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400"><i class="fas fa-envelope"></i></div>
+                        <input type="email" required x-model="authForm.email" class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition">
+                    </div>
                 </div>
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400"><i class="fas fa-lock"></i></div>
+                        <input type="password" required x-model="authForm.password" class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition">
+                    </div>
+                </div>
+                <button type="submit" class="w-full bg-primary hover:bg-blue-600 text-white font-bold py-2.5 px-4 rounded-lg transition duration-200 flex justify-center items-center h-11" :disabled="isAuthLoading">
+                    <span x-show="!isAuthLoading" x-text="isLoginMode ? 'Masuk' : 'Daftar Akun'"></span>
+                    <div x-show="isAuthLoading" class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                </button>
+            </form>
+
+            <div class="mt-6 text-center">
+                <button @click="toggleAuthMode" class="text-sm text-primary hover:underline font-medium focus:outline-none">
+                    <span x-text="isLoginMode ? 'Belum punya akun? Daftar gratis di sini.' : 'Sudah punya akun? Masuk di sini.'"></span>
+                </button>
             </div>
         </div>
-    </nav>
+    </div>
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
-        <!-- TAB: DASHBOARD -->
-        <div x-show="activeTab === 'dashboard'" x-transition.opacity>
-            <h2 class="text-2xl font-bold mb-6 text-gray-800">Ringkasan Bulan Ini (<span x-text="currentMonthName"></span>)</h2>
-            
-            <!-- Cards Ringkasan -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <!-- Saldo -->
-                <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-primary">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-gray-500 font-semibold text-sm uppercase">Total Saldo</h3>
-                        <div class="bg-blue-100 p-2 rounded-full text-primary"><i class="fas fa-balance-scale"></i></div>
+    <!-- Konten Utama (Hanya muncul jika sudah login) -->
+    <div x-show="authState === 'authenticated'" x-cloak class="flex-1 flex flex-col">
+        <!-- Navbar -->
+        <nav class="bg-primary text-white shadow-md sticky top-0 z-10">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-16 items-center">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-wallet text-2xl"></i>
+                        <span class="font-bold text-xl tracking-wide hidden sm:block">KeuanganKu</span>
                     </div>
-                    <p class="text-3xl font-bold text-gray-800" x-text="formatRupiah(totalPemasukanBulanIni - totalPengeluaranBulanIni)"></p>
-                </div>
-                
-                <!-- Pemasukan -->
-                <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-success">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-gray-500 font-semibold text-sm uppercase">Pemasukan Bulan Ini</h3>
-                        <div class="bg-green-100 p-2 rounded-full text-success"><i class="fas fa-arrow-down"></i></div>
+                    <!-- Menu Tabs -->
+                    <div class="flex gap-1 sm:gap-2 overflow-x-auto no-scrollbar">
+                        <button @click="activeTab = 'dashboard'" :class="{'bg-blue-700': activeTab === 'dashboard'}" class="px-2 sm:px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-600 transition flex items-center gap-2">
+                            <i class="fas fa-home"></i><span class="hidden sm:inline">Dashboard</span>
+                        </button>
+                        <button @click="activeTab = 'transaksi'" :class="{'bg-blue-700': activeTab === 'transaksi'}" class="px-2 sm:px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-600 transition flex items-center gap-2">
+                            <i class="fas fa-exchange-alt"></i><span class="hidden sm:inline">Transaksi</span>
+                        </button>
+                        <button @click="activeTab = 'investasi'" :class="{'bg-blue-700': activeTab === 'investasi'}" class="px-2 sm:px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-600 transition flex items-center gap-2">
+                            <i class="fas fa-chart-line"></i><span class="hidden sm:inline">Investasi</span>
+                        </button>
+                        <button @click="activeTab = 'rencana'" :class="{'bg-blue-700': activeTab === 'rencana'}" class="px-2 sm:px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-600 transition flex items-center gap-2">
+                            <i class="fas fa-list-check"></i><span class="hidden sm:inline">Rencana</span>
+                        </button>
+                        <button @click="activeTab = 'histori'" :class="{'bg-blue-700': activeTab === 'histori'}" class="px-2 sm:px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-600 transition flex items-center gap-2">
+                            <i class="fas fa-history"></i><span class="hidden md:inline">Histori</span>
+                        </button>
                     </div>
-                    <p class="text-3xl font-bold text-success" x-text="formatRupiah(totalPemasukanBulanIni)"></p>
-                </div>
-                
-                <!-- Pengeluaran -->
-                <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-danger">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-gray-500 font-semibold text-sm uppercase">Pengeluaran Bulan Ini</h3>
-                        <div class="bg-red-100 p-2 rounded-full text-danger"><i class="fas fa-arrow-up"></i></div>
-                    </div>
-                    <p class="text-3xl font-bold text-danger" x-text="formatRupiah(totalPengeluaranBulanIni)"></p>
-                </div>
-            </div>
-
-            <!-- Rekomendasi Alokasi 50/30/20 -->
-            <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-8">
-                <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
-                    <h3 class="text-lg font-bold text-gray-800"><i class="fas fa-lightbulb text-warning mr-2"></i>Rekomendasi Alokasi Dana (Aturan 50/30/20)</h3>
-                    <p class="text-sm text-gray-500 mt-1">Berdasarkan total pemasukan Anda bulan ini.</p>
-                </div>
-                <div class="p-6">
-                    <div x-show="totalPemasukanBulanIni === 0" class="text-center py-4 text-gray-500">
-                        Belum ada pemasukan tercatat untuk bulan ini. Tambahkan transaksi untuk melihat rekomendasi.
-                    </div>
-                    <div x-show="totalPemasukanBulanIni > 0" class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        
-                        <!-- Kebutuhan Pokok 50% -->
-                        <div class="border rounded-lg p-4 flex flex-col items-center text-center">
-                            <div class="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mb-3 text-2xl">
-                                <i class="fas fa-home"></i>
-                            </div>
-                            <h4 class="font-bold text-gray-700">Kebutuhan Pokok (50%)</h4>
-                            <p class="text-sm text-gray-500 mb-2">Sewa, Tagihan, Makanan, Transportasi</p>
-                            <p class="text-xl font-bold text-blue-600 mt-auto" x-text="formatRupiah(totalPemasukanBulanIni * 0.5)"></p>
-                        </div>
-                        
-                        <!-- Keinginan 30% -->
-                        <div class="border rounded-lg p-4 flex flex-col items-center text-center">
-                            <div class="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 mb-3 text-2xl">
-                                <i class="fas fa-coffee"></i>
-                            </div>
-                            <h4 class="font-bold text-gray-700">Keinginan (30%)</h4>
-                            <p class="text-sm text-gray-500 mb-2">Hiburan, Makan di luar, Hobi, Liburan</p>
-                            <p class="text-xl font-bold text-purple-600 mt-auto" x-text="formatRupiah(totalPemasukanBulanIni * 0.3)"></p>
-                        </div>
-                        
-                        <!-- Tabungan/Investasi 20% -->
-                        <div class="border rounded-lg p-4 flex flex-col items-center text-center">
-                            <div class="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center text-green-600 mb-3 text-2xl">
-                                <i class="fas fa-piggy-bank"></i>
-                            </div>
-                            <h4 class="font-bold text-gray-700">Tabungan & Investasi (20%)</h4>
-                            <p class="text-sm text-gray-500 mb-2">Dana Darurat, Saham, Reksa Dana</p>
-                            <p class="text-xl font-bold text-green-600 mt-auto" x-text="formatRupiah(totalPemasukanBulanIni * 0.2)"></p>
-                        </div>
+                    <!-- Logout -->
+                    <div class="flex items-center border-l border-blue-600 pl-3 sm:pl-4 ml-1 sm:ml-2">
+                        <button @click="konfirmasiLogout()" class="text-red-200 hover:text-white transition" title="Keluar">
+                            <i class="fas fa-sign-out-alt text-xl"></i>
+                        </button>
                     </div>
                 </div>
             </div>
+        </nav>
+
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex-1">
             
-            <!-- Ringkasan per Kategori -->
-            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-                <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
-                    <h3 class="text-lg font-bold text-gray-800"><i class="fas fa-chart-pie text-gray-600 mr-2"></i>Pengeluaran per Kategori (Bulan Ini)</h3>
-                </div>
-                <div class="p-6">
-                    <div x-show="Object.keys(pengeluaranPerKategori).length === 0" class="text-center py-4 text-gray-500">
-                        Belum ada pengeluaran tercatat untuk bulan ini.
+            <!-- TAB: DASHBOARD -->
+            <div x-show="activeTab === 'dashboard'" x-transition.opacity>
+                <div class="flex justify-between items-end mb-6 border-b pb-4">
+                    <div>
+                        <p class="text-gray-500 text-sm mb-1" x-text="'Halo, ' + userEmail"></p>
+                        <h2 class="text-2xl font-bold text-gray-800">Ringkasan Bulan Ini (<span x-text="currentMonthName"></span>)</h2>
                     </div>
-                    <div x-show="Object.keys(pengeluaranPerKategori).length > 0" class="space-y-4">
-                        <template x-for="(jumlah, kategori) in pengeluaranPerKategori" :key="kategori">
-                            <div>
-                                <div class="flex justify-between text-sm font-medium text-gray-700 mb-1">
-                                    <span x-text="kategori"></span>
-                                    <span x-text="formatRupiah(jumlah)"></span>
+                </div>
+                
+                <!-- Cards Ringkasan -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <!-- Saldo -->
+                    <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-primary">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-gray-500 font-semibold text-sm uppercase">Sisa Saldo Bulan Ini</h3>
+                            <div class="bg-blue-100 p-2 rounded-full text-primary"><i class="fas fa-balance-scale"></i></div>
+                        </div>
+                        <p class="text-3xl font-bold text-gray-800" x-text="formatRupiah(totalPemasukanBulanIni - totalPengeluaranBulanIni)"></p>
+                    </div>
+                    <!-- Pemasukan -->
+                    <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-success">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-gray-500 font-semibold text-sm uppercase">Pemasukan Bulan Ini</h3>
+                            <div class="bg-green-100 p-2 rounded-full text-success"><i class="fas fa-arrow-down"></i></div>
+                        </div>
+                        <p class="text-3xl font-bold text-success" x-text="formatRupiah(totalPemasukanBulanIni)"></p>
+                    </div>
+                    <!-- Pengeluaran -->
+                    <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-danger">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-gray-500 font-semibold text-sm uppercase">Pengeluaran Bulan Ini</h3>
+                            <div class="bg-red-100 p-2 rounded-full text-danger"><i class="fas fa-arrow-up"></i></div>
+                        </div>
+                        <p class="text-3xl font-bold text-danger" x-text="formatRupiah(totalPengeluaranBulanIni)"></p>
+                    </div>
+                </div>
+
+                <!-- Rekomendasi Alokasi 50/30/20 -->
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-8 border border-gray-100">
+                    <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                        <h3 class="text-lg font-bold text-gray-800"><i class="fas fa-lightbulb text-warning mr-2"></i>Rekomendasi Alokasi Dana (Aturan 50/30/20)</h3>
+                        <p class="text-sm text-gray-500 mt-1">Berdasarkan total pemasukan Anda bulan ini.</p>
+                    </div>
+                    <div class="p-6">
+                        <div x-show="totalPemasukanBulanIni === 0" class="text-center py-4 text-gray-500">
+                            Belum ada pemasukan tercatat untuk bulan ini.
+                        </div>
+                        <div x-show="totalPemasukanBulanIni > 0" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="border rounded-lg p-4 flex flex-col items-center text-center bg-blue-50/50">
+                                <div class="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mb-3 text-2xl"><i class="fas fa-home"></i></div>
+                                <h4 class="font-bold text-gray-700">Kebutuhan Pokok (50%)</h4>
+                                <p class="text-sm text-gray-500 mb-2">Sewa, Tagihan, Makanan Pokok</p>
+                                <p class="text-xl font-bold text-blue-600 mt-auto" x-text="formatRupiah(totalPemasukanBulanIni * 0.5)"></p>
+                            </div>
+                            <div class="border rounded-lg p-4 flex flex-col items-center text-center bg-purple-50/50">
+                                <div class="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 mb-3 text-2xl"><i class="fas fa-coffee"></i></div>
+                                <h4 class="font-bold text-gray-700">Keinginan (30%)</h4>
+                                <p class="text-sm text-gray-500 mb-2">Hiburan, Makan di luar, Hobi</p>
+                                <p class="text-xl font-bold text-purple-600 mt-auto" x-text="formatRupiah(totalPemasukanBulanIni * 0.3)"></p>
+                            </div>
+                            <div class="border rounded-lg p-4 flex flex-col items-center text-center bg-green-50/50">
+                                <div class="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center text-green-600 mb-3 text-2xl"><i class="fas fa-piggy-bank"></i></div>
+                                <h4 class="font-bold text-gray-700">Tabungan & Investasi (20%)</h4>
+                                <p class="text-sm text-gray-500 mb-2">Dana Darurat, Saham, Emas</p>
+                                <p class="text-xl font-bold text-green-600 mt-auto" x-text="formatRupiah(totalPemasukanBulanIni * 0.2)"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: TRANSAKSI -->
+            <div x-show="activeTab === 'transaksi'" x-cloak x-transition.opacity>
+                <h2 class="text-2xl font-bold mb-6 text-gray-800 border-b pb-4">Pencatatan Transaksi</h2>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Form Input Transaksi -->
+                    <div class="lg:col-span-1">
+                        <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 sticky top-24">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Tambah Transaksi</h3>
+                            <form @submit.prevent="tambahTransaksi">
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Jenis</label>
+                                    <div class="flex gap-4 p-2 bg-gray-50 rounded-lg border border-gray-200">
+                                        <label class="inline-flex items-center cursor-pointer">
+                                            <input type="radio" class="form-radio text-success w-4 h-4" name="jenis" value="pemasukan" x-model="formTransaksi.jenis">
+                                            <span class="ml-2 text-sm font-medium text-gray-700">Pemasukan</span>
+                                        </label>
+                                        <label class="inline-flex items-center cursor-pointer">
+                                            <input type="radio" class="form-radio text-danger w-4 h-4" name="jenis" value="pengeluaran" x-model="formTransaksi.jenis">
+                                            <span class="ml-2 text-sm font-medium text-gray-700">Pengeluaran</span>
+                                        </label>
+                                    </div>
                                 </div>
-                                <div class="w-full bg-gray-200 rounded-full h-2.5">
-                                    <div class="bg-danger h-2.5 rounded-full" :style="`width: ${(jumlah/totalPengeluaranBulanIni)*100}%`"></div>
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal</label>
+                                    <input type="date" required x-model="formTransaksi.tanggal" class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 p-2 border outline-none transition">
                                 </div>
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Kategori</label>
+                                    <select required x-model="formTransaksi.kategori" class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 p-2 border bg-white outline-none transition">
+                                        <option value="" disabled selected>Pilih Kategori</option>
+                                        <template x-if="formTransaksi.jenis === 'pemasukan'">
+                                            <optgroup label="Pemasukan">
+                                                <option value="Gaji">Gaji</option>
+                                                <option value="Bonus">Bonus</option>
+                                                <option value="Usaha">Hasil Usaha</option>
+                                                <option value="Lainnya (Masuk)">Lainnya</option>
+                                            </optgroup>
+                                        </template>
+                                        <template x-if="formTransaksi.jenis === 'pengeluaran'">
+                                            <optgroup label="Pengeluaran">
+                                                <option value="Makanan">Makanan & Minuman</option>
+                                                <option value="Transportasi">Transportasi</option>
+                                                <option value="Tagihan">Tagihan (Listrik, Air, Internet)</option>
+                                                <option value="Tempat Tinggal">Tempat Tinggal</option>
+                                                <option value="Belanja">Belanja (Pakaian, dll)</option>
+                                                <option value="Hiburan">Hiburan</option>
+                                                <option value="Lainnya (Keluar)">Lainnya</option>
+                                            </optgroup>
+                                        </template>
+                                    </select>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah (Rp)</label>
+                                    <input type="number" required min="1" x-model.number="formTransaksi.jumlah" placeholder="Contoh: 50000" class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 p-2 border outline-none transition">
+                                </div>
+                                <div class="mb-6">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Keterangan</label>
+                                    <input type="text" x-model="formTransaksi.keterangan" placeholder="Contoh: Makan siang" class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 p-2 border outline-none transition">
+                                </div>
+                                <button type="submit" class="w-full bg-primary hover:bg-blue-600 text-white font-bold py-2.5 px-4 rounded-md transition duration-200">
+                                    <i class="fas fa-save mr-2"></i> Simpan
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- Tabel Riwayat Transaksi -->
+                    <div class="lg:col-span-2">
+                        <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
+                            <div class="bg-gray-50 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                                <h3 class="text-lg font-bold text-gray-800">Daftar Transaksi</h3>
+                                <div class="flex items-center gap-2 bg-white px-2 py-1 rounded border shadow-sm">
+                                    <i class="far fa-calendar-alt text-gray-400"></i>
+                                    <input type="month" x-model="filterBulan" class="text-sm text-gray-700 bg-transparent border-none focus:ring-0 cursor-pointer outline-none">
+                                </div>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-white">
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Tanggal & Info</th>
+                                            <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Pemasukan</th>
+                                            <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Pengeluaran</th>
+                                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider"><i class="fas fa-cog"></i></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-100">
+                                        <tr x-show="transaksiTampil.length === 0">
+                                            <td colspan="4" class="px-6 py-8 text-center text-gray-400">
+                                                <i class="fas fa-receipt text-3xl mb-2"></i><br>Belum ada catatan bulan ini.
+                                            </td>
+                                        </tr>
+                                        <template x-for="t in transaksiTampil" :key="t.id">
+                                            <tr class="hover:bg-gray-50 transition">
+                                                <td class="px-6 py-3">
+                                                    <div class="text-sm font-bold text-gray-800" x-text="t.kategori"></div>
+                                                    <div class="text-xs text-gray-500" x-text="formatTanggal(t.tanggal) + (t.keterangan ? ' - ' + t.keterangan : '')"></div>
+                                                </td>
+                                                <td class="px-6 py-3 text-right text-sm font-semibold text-success">
+                                                    <span x-show="t.jenis === 'pemasukan'" x-text="'+ ' + formatRupiah(t.jumlah)"></span>
+                                                </td>
+                                                <td class="px-6 py-3 text-right text-sm font-semibold text-danger">
+                                                    <span x-show="t.jenis === 'pengeluaran'" x-text="'- ' + formatRupiah(t.jumlah)"></span>
+                                                </td>
+                                                <td class="px-4 py-3 text-center">
+                                                    <button @click="konfirmasiHapus('transaksi', t.id, 'Hapus transaksi ' + t.kategori + '?')" class="text-gray-400 hover:text-red-500 p-1 transition" title="Hapus">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                    <tfoot class="bg-gray-50 font-bold border-t border-gray-200">
+                                        <tr>
+                                            <td class="px-6 py-4 text-right text-sm text-gray-700">Total:</td>
+                                            <td class="px-6 py-4 text-right text-sm text-success" x-text="formatRupiah(totalPemasukanFilter)"></td>
+                                            <td class="px-6 py-4 text-right text-sm text-danger" x-text="formatRupiah(totalPengeluaranFilter)"></td>
+                                            <td></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: HISTORI KEUANGAN (Baru) -->
+            <div x-show="activeTab === 'histori'" x-cloak x-transition.opacity>
+                <h2 class="text-2xl font-bold mb-6 text-gray-800 border-b pb-4">Histori Keuangan Bulanan</h2>
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
+                    <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                        <p class="text-sm text-gray-600">Rangkuman total pemasukan dan pengeluaran Anda dari bulan ke bulan.</p>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-white">
+                                <tr>
+                                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Periode (Bulan)</th>
+                                    <th class="px-6 py-4 text-right text-xs font-bold text-green-600 uppercase tracking-wider">Total Masuk</th>
+                                    <th class="px-6 py-4 text-right text-xs font-bold text-red-600 uppercase tracking-wider">Total Keluar</th>
+                                    <th class="px-6 py-4 text-right text-xs font-bold text-blue-600 uppercase tracking-wider">Sisa / Saldo</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-100">
+                                <tr x-show="historiBulanan.length === 0">
+                                    <td colspan="4" class="px-6 py-8 text-center text-gray-400">Belum ada data historis. Mulai catat transaksi Anda!</td>
+                                </tr>
+                                <template x-for="h in historiBulanan" :key="h.bulan">
+                                    <tr class="hover:bg-gray-50 transition">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-800" x-text="formatNamaBulanTahun(h.bulan)"></td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-success font-medium" x-text="formatRupiah(h.pemasukan)"></td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-danger font-medium" x-text="formatRupiah(h.pengeluaran)"></td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-bold" :class="h.saldo >= 0 ? 'text-primary' : 'text-danger'" x-text="formatRupiah(h.saldo)"></td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: INVESTASI (Kode tidak banyak diubah dari versi sebelumnya, hanya disesuaikan Firebase) -->
+            <div x-show="activeTab === 'investasi'" x-cloak x-transition.opacity>
+                <div class="flex justify-between items-center mb-6 border-b pb-4">
+                    <h2 class="text-2xl font-bold text-gray-800">Monitoring Investasi</h2>
+                </div>
+                <!-- Ringkasan Investasi -->
+                <div class="bg-gradient-to-r from-green-600 to-green-500 rounded-xl shadow-md p-6 mb-8 text-white">
+                    <h3 class="text-green-100 font-medium text-sm uppercase mb-1">Total Nilai Portofolio</h3>
+                    <p class="text-4xl font-bold mb-4" x-text="formatRupiah(totalNilaiInvestasi)"></p>
+                    <div class="flex gap-6 text-sm bg-black bg-opacity-20 inline-flex p-3 rounded-lg border border-green-400">
+                        <div>Modal: <span class="font-bold" x-text="formatRupiah(totalModalInvestasi)"></span></div>
+                        <div>Return: <span class="font-bold" :class="totalKeuntunganInvestasi >= 0 ? 'text-green-200' : 'text-red-300'" x-text="formatRupiah(totalKeuntunganInvestasi)"></span></div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-1">
+                        <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 sticky top-24">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2" x-text="formInvestasi.id ? 'Update Aset' : 'Tambah Aset Baru'"></h3>
+                            <form @submit.prevent="simpanInvestasi">
+                                <div class="mb-3">
+                                    <label class="block text-sm text-gray-700 mb-1">Nama Aset</label>
+                                    <input type="text" required x-model="formInvestasi.nama" class="w-full rounded-md border-gray-300 p-2 border outline-none focus:border-green-500">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="block text-sm text-gray-700 mb-1">Total Modal (Rp)</label>
+                                    <input type="number" required x-model.number="formInvestasi.modal" class="w-full rounded-md border-gray-300 p-2 border outline-none focus:border-green-500">
+                                </div>
+                                <div class="mb-5">
+                                    <label class="block text-sm text-gray-700 mb-1">Nilai Sekarang (Rp)</label>
+                                    <input type="number" required x-model.number="formInvestasi.nilaiSekarang" class="w-full rounded-md border-gray-300 p-2 border outline-none focus:border-green-500">
+                                </div>
+                                <div class="flex gap-2">
+                                    <button type="submit" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded-md transition"><i class="fas fa-save mr-1"></i> Simpan</button>
+                                    <button type="button" x-show="formInvestasi.id" @click="resetFormInvestasi" class="px-4 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold rounded-md transition">Batal</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 h-max">
+                        <div x-show="investasiList.length === 0" class="col-span-full text-center py-8 text-gray-400 bg-white rounded-xl border border-dashed">Belum ada aset dicatat.</div>
+                        <template x-for="aset in investasiList" :key="aset.id">
+                            <div class="bg-white border rounded-xl p-5 hover:shadow-md transition relative">
+                                <button @click="konfirmasiHapus('investasi', aset.id, 'Hapus aset ' + aset.nama + '?')" class="absolute top-4 right-4 text-gray-300 hover:text-red-500 transition"><i class="fas fa-times"></i></button>
+                                <h4 class="font-bold text-gray-800 text-lg mb-4" x-text="aset.nama"></h4>
+                                <div class="space-y-1 text-sm mb-4">
+                                    <div class="flex justify-between text-gray-500"><span>Modal:</span><span class="text-gray-700" x-text="formatRupiah(aset.modal)"></span></div>
+                                    <div class="flex justify-between text-gray-500"><span>Nilai Saat Ini:</span><span class="font-bold text-gray-800" x-text="formatRupiah(aset.nilaiSekarang)"></span></div>
+                                </div>
+                                <button @click="editInvestasi(aset)" class="w-full text-xs bg-gray-50 hover:bg-gray-100 text-gray-600 py-2 border rounded transition"><i class="fas fa-edit mr-1"></i> Update Nilai</button>
                             </div>
                         </template>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- TAB: TRANSAKSI -->
-        <div x-show="activeTab === 'transaksi'" x-cloak x-transition.opacity>
-            <h2 class="text-2xl font-bold mb-6 text-gray-800">Catatan Transaksi</h2>
-            
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                
-                <!-- Form Input Transaksi -->
-                <div class="lg:col-span-1">
-                    <div class="bg-white rounded-xl shadow-sm p-6 sticky top-24">
-                        <h3 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Tambah Transaksi Baru</h3>
-                        
-                        <form @submit.prevent="tambahTransaksi">
-                            <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Jenis Transaksi</label>
-                                <div class="flex gap-4">
-                                    <label class="inline-flex items-center">
-                                        <input type="radio" class="form-radio text-success" name="jenis" value="pemasukan" x-model="formTransaksi.jenis">
-                                        <span class="ml-2 text-gray-700">Pemasukan</span>
-                                    </label>
-                                    <label class="inline-flex items-center">
-                                        <input type="radio" class="form-radio text-danger" name="jenis" value="pengeluaran" x-model="formTransaksi.jenis">
-                                        <span class="ml-2 text-gray-700">Pengeluaran</span>
-                                    </label>
+            <!-- TAB: RENCANA BELANJA -->
+            <div x-show="activeTab === 'rencana'" x-cloak x-transition.opacity>
+                <h2 class="text-2xl font-bold mb-6 text-gray-800 border-b pb-4">Rencana Belanja (Wishlist)</h2>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-1">
+                        <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 sticky top-24">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Tambah Item</h3>
+                            <form @submit.prevent="tambahRencana">
+                                <div class="mb-3">
+                                    <label class="block text-sm text-gray-700 mb-1">Nama Barang/Tagihan</label>
+                                    <input type="text" required x-model="formRencana.nama" class="w-full rounded-md border-gray-300 p-2 border outline-none focus:border-primary">
                                 </div>
-                            </div>
-
-                            <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal</label>
-                                <input type="date" required x-model="formTransaksi.tanggal" 
-                                       class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 p-2 border">
-                            </div>
-
-                            <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Kategori</label>
-                                <select required x-model="formTransaksi.kategori" 
-                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 p-2 border bg-white">
-                                    <option value="" disabled selected>Pilih Kategori</option>
-                                    
-                                    <!-- Kategori dinamis berdasarkan jenis -->
-                                    <template x-if="formTransaksi.jenis === 'pemasukan'">
-                                        <optgroup label="Pemasukan">
-                                            <option value="Gaji">Gaji</option>
-                                            <option value="Bonus">Bonus</option>
-                                            <option value="Hasil Usaha">Hasil Usaha</option>
-                                            <option value="Lainnya (Pemasukan)">Lainnya</option>
-                                        </optgroup>
-                                    </template>
-                                    
-                                    <template x-if="formTransaksi.jenis === 'pengeluaran'">
-                                        <optgroup label="Pengeluaran (Kebutuhan & Keinginan)">
-                                            <option value="Makanan & Minuman">Makanan & Minuman</option>
-                                            <option value="Transportasi">Transportasi</option>
-                                            <option value="Tagihan & Utilitas">Tagihan & Utilitas (Listrik, Air, Internet)</option>
-                                            <option value="Tempat Tinggal">Tempat Tinggal (Sewa/Cicilan)</option>
-                                            <option value="Kesehatan">Kesehatan</option>
-                                            <option value="Belanja (Pakaian, dll)">Belanja (Pakaian, dll)</option>
-                                            <option value="Hiburan">Hiburan</option>
-                                            <option value="Lainnya (Pengeluaran)">Lainnya</option>
-                                        </optgroup>
-                                    </template>
-                                </select>
-                            </div>
-
-                            <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah (Rp)</label>
-                                <input type="number" required min="1" x-model.number="formTransaksi.jumlah" placeholder="Contoh: 50000"
-                                       class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 p-2 border">
-                            </div>
-
-                            <div class="mb-6">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Keterangan (Opsional)</label>
-                                <input type="text" x-model="formTransaksi.keterangan" placeholder="Contoh: Makan siang nasi padang"
-                                       class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 p-2 border">
-                            </div>
-
-                            <button type="submit" 
-                                    class="w-full bg-primary hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md transition duration-200">
-                                <i class="fas fa-plus mr-2"></i> Simpan Transaksi
-                            </button>
-                        </form>
-                    </div>
-                </div>
-                
-                <!-- Tabel Riwayat Transaksi -->
-                <div class="lg:col-span-2">
-                    <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-                        <div class="bg-gray-50 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-                            <h3 class="text-lg font-bold text-gray-800">Riwayat Transaksi</h3>
-                            
-                            <!-- Filter Bulan -->
-                            <div class="flex items-center gap-2">
-                                <label class="text-sm text-gray-600">Filter Bulan:</label>
-                                <input type="month" x-model="filterBulan" class="text-sm rounded-md border-gray-300 shadow-sm p-1 border">
-                            </div>
+                                <div class="mb-5">
+                                    <label class="block text-sm text-gray-700 mb-1">Estimasi Harga (Rp)</label>
+                                    <input type="number" required min="1" x-model.number="formRencana.harga" class="w-full rounded-md border-gray-300 p-2 border outline-none focus:border-primary">
+                                </div>
+                                <button type="submit" class="w-full bg-primary hover:bg-blue-600 text-white font-bold py-2 rounded-md transition"><i class="fas fa-plus mr-1"></i> Tambah Daftar</button>
+                            </form>
                         </div>
-                        
-                        <div class="overflow-x-auto">
+                    </div>
+                    <div class="lg:col-span-2">
+                        <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
+                            <div class="bg-gray-50 px-6 py-4 border-b border-gray-200"><h3 class="text-lg font-bold text-gray-800">Daftar Kebutuhan</h3></div>
                             <table class="min-w-full divide-y divide-gray-200">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kategori/Keterangan</th>
-                                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Pemasukan</th>
-                                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Pengeluaran</th>
-                                        <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white divide-y divide-gray-200">
-                                    <tr x-show="transaksiTampil.length === 0">
-                                        <td colspan="5" class="px-6 py-8 text-center text-gray-500">
-                                            Tidak ada transaksi untuk bulan ini.
-                                        </td>
-                                    </tr>
-                                    <template x-for="t in transaksiTampil" :key="t.id">
-                                        <tr class="hover:bg-gray-50 transition">
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" x-text="formatTanggal(t.tanggal)"></td>
-                                            <td class="px-6 py-4">
-                                                <div class="text-sm font-medium text-gray-900" x-text="t.kategori"></div>
-                                                <div class="text-sm text-gray-500" x-text="t.keterangan || '-'"></div>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-medium text-success">
-                                                <span x-show="t.jenis === 'pemasukan'" x-text="formatRupiah(t.jumlah)"></span>
-                                                <span x-show="t.jenis !== 'pemasukan'">-</span>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-medium text-danger">
-                                                <span x-show="t.jenis === 'pengeluaran'" x-text="formatRupiah(t.jumlah)"></span>
-                                                <span x-show="t.jenis !== 'pengeluaran'">-</span>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                                                <button @click="hapusTransaksi(t.id)" class="text-red-500 hover:text-red-700" title="Hapus">
-                                                    <i class="fas fa-trash-alt"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    </template>
-                                </tbody>
-                                <tfoot class="bg-gray-50 font-bold border-t-2 border-gray-200">
-                                    <tr>
-                                        <td colspan="2" class="px-6 py-4 text-right text-sm text-gray-700">Total Periode Ini:</td>
-                                        <td class="px-6 py-4 text-right text-sm text-success" x-text="formatRupiah(totalPemasukanFilter)"></td>
-                                        <td class="px-6 py-4 text-right text-sm text-danger" x-text="formatRupiah(totalPengeluaranFilter)"></td>
-                                        <td></td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- TAB: INVESTASI -->
-        <div x-show="activeTab === 'investasi'" x-cloak x-transition.opacity>
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold text-gray-800">Monitoring Investasi</h2>
-                <!-- Info Porsi Investasi dari Rekomendasi -->
-                 <div class="bg-green-100 text-green-800 px-4 py-2 rounded-lg text-sm font-medium flex items-center shadow-sm">
-                    <i class="fas fa-info-circle mr-2"></i>
-                    Target Investasi/Bulan Ini (20%): <span class="ml-1 font-bold" x-text="formatRupiah(totalPemasukanBulanIni * 0.2)"></span>
-                </div>
-            </div>
-
-            <!-- Ringkasan Portofolio -->
-            <div class="bg-white rounded-xl shadow-sm p-6 mb-8 border-t-4 border-green-500">
-                <h3 class="text-gray-500 font-semibold text-sm uppercase mb-2">Total Nilai Portofolio Saat Ini</h3>
-                <p class="text-4xl font-bold text-gray-800" x-text="formatRupiah(totalNilaiInvestasi)"></p>
-                <div class="mt-4 flex flex-wrap gap-4 text-sm">
-                    <div class="bg-gray-100 px-3 py-1 rounded">
-                        Total Modal Tercatat: <span class="font-bold text-gray-700" x-text="formatRupiah(totalModalInvestasi)"></span>
-                    </div>
-                    <div :class="totalKeuntunganInvestasi >= 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'" class="px-3 py-1 rounded flex items-center">
-                        <span class="mr-1">Estimasi Return:</span> 
-                        <span class="font-bold" x-text="formatRupiah(totalKeuntunganInvestasi)"></span>
-                        <span class="ml-1 text-xs" x-show="totalModalInvestasi > 0" x-text="`(${((totalKeuntunganInvestasi/totalModalInvestasi)*100).toFixed(2)}%)`"></span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <!-- Form Tambah/Update Aset Investasi -->
-                <div class="lg:col-span-1">
-                    <div class="bg-white rounded-xl shadow-sm p-6 sticky top-24">
-                        <h3 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Catat / Update Aset</h3>
-                        <p class="text-xs text-gray-500 mb-4">Catat pembelian baru atau perbarui nilai aset Anda saat ini untuk melihat keuntungannya.</p>
-                        
-                        <form @submit.prevent="simpanInvestasi">
-                            <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Nama Aset</label>
-                                <input type="text" required x-model="formInvestasi.nama" placeholder="Contoh: Reksadana Sucor, Saham BBCA, Emas"
-                                       class="w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-500 focus:ring-opacity-50 p-2 border">
-                            </div>
-                            
-                            <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Jenis Aset</label>
-                                <select required x-model="formInvestasi.jenis" 
-                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-500 focus:ring-opacity-50 p-2 border bg-white">
-                                    <option value="" disabled selected>Pilih Jenis</option>
-                                    <option value="Reksadana">Reksadana</option>
-                                    <option value="Saham">Saham</option>
-                                    <option value="Emas">Emas (Logam Mulia)</option>
-                                    <option value="Deposito">Deposito</option>
-                                    <option value="Kripto">Kripto</option>
-                                    <option value="Lainnya">Lainnya</option>
-                                </select>
-                            </div>
-
-                            <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Total Modal Disetor (Rp)</label>
-                                <input type="number" required min="0" x-model.number="formInvestasi.modal" placeholder="Berapa uang yang Anda keluarkan?"
-                                       class="w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-500 focus:ring-opacity-50 p-2 border">
-                            </div>
-
-                            <div class="mb-6">
-                                <label class="block text-sm font-medium text-gray-700 mb-1 flex items-center justify-between">
-                                    <span>Nilai Saat Ini (Rp)</span>
-                                    <span class="text-xs font-normal text-gray-500 cursor-help" title="Cek aplikasi investasi Anda untuk nilai terkini">Cek Aplikasi!</span>
-                                </label>
-                                <input type="number" required min="0" x-model.number="formInvestasi.nilaiSekarang" placeholder="Nilai aset jika dijual sekarang"
-                                       class="w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-500 focus:ring-opacity-50 p-2 border">
-                            </div>
-
-                            <button type="submit" 
-                                    class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md transition duration-200">
-                                <i class="fas fa-save mr-2"></i> Simpan Aset
-                            </button>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- Daftar Aset Investasi -->
-                <div class="lg:col-span-2">
-                    <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-                        <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
-                            <h3 class="text-lg font-bold text-gray-800">Daftar Portofolio Saya</h3>
-                        </div>
-                        
-                        <div class="p-6">
-                            <div x-show="investasiList.length === 0" class="text-center py-8 text-gray-500">
-                                <i class="fas fa-box-open text-4xl mb-3 text-gray-300"></i>
-                                <p>Anda belum mencatat aset investasi apapun.</p>
-                            </div>
-                            
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <template x-for="aset in investasiList" :key="aset.id">
-                                    <div class="border rounded-lg p-4 hover:shadow-md transition relative">
-                                        <!-- Tombol Hapus Aset -->
-                                        <button @click="hapusInvestasi(aset.id)" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition">
-                                            <i class="fas fa-times"></i>
-                                        </button>
-                                        
-                                        <div class="flex items-center gap-3 mb-3">
-                                            <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
-                                                <i class="fas fa-chart-line" x-show="aset.jenis === 'Saham' || aset.jenis === 'Reksadana'"></i>
-                                                <i class="fas fa-coins" x-show="aset.jenis === 'Emas'"></i>
-                                                <i class="fas fa-university" x-show="aset.jenis === 'Deposito'"></i>
-                                                <i class="fab fa-bitcoin" x-show="aset.jenis === 'Kripto'"></i>
-                                                <i class="fas fa-seedling" x-show="aset.jenis === 'Lainnya' || !aset.jenis"></i>
-                                            </div>
-                                            <div>
-                                                <h4 class="font-bold text-gray-800 text-lg leading-tight" x-text="aset.nama"></h4>
-                                                <span class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full" x-text="aset.jenis"></span>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="space-y-2 text-sm mt-4">
-                                            <div class="flex justify-between border-b pb-1">
-                                                <span class="text-gray-500">Modal:</span>
-                                                <span class="font-medium text-gray-700" x-text="formatRupiah(aset.modal)"></span>
-                                            </div>
-                                            <div class="flex justify-between border-b pb-1">
-                                                <span class="text-gray-500">Nilai Saat Ini:</span>
-                                                <span class="font-bold text-gray-800" x-text="formatRupiah(aset.nilaiSekarang)"></span>
-                                            </div>
-                                            <div class="flex justify-between pt-1">
-                                                <span class="text-gray-500">Return:</span>
-                                                <div class="text-right">
-                                                    <span class="font-bold block" 
-                                                          :class="aset.nilaiSekarang - aset.modal >= 0 ? 'text-success' : 'text-danger'"
-                                                          x-text="formatRupiah(aset.nilaiSekarang - aset.modal)"></span>
-                                                    <span class="text-xs" 
-                                                          :class="aset.nilaiSekarang - aset.modal >= 0 ? 'text-success' : 'text-danger'"
-                                                          x-text="aset.modal > 0 ? (aset.nilaiSekarang - aset.modal >= 0 ? '+' : '') + (((aset.nilaiSekarang - aset.modal)/aset.modal)*100).toFixed(2) + '%' : '0%'"></span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <button @click="editInvestasi(aset)" class="w-full mt-4 text-xs bg-gray-50 hover:bg-gray-100 text-gray-600 py-2 border rounded transition">
-                                            <i class="fas fa-edit mr-1"></i> Update Nilai
-                                        </button>
-                                    </div>
-                                </template>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- TAB: RENCANA BELANJA -->
-        <div x-show="activeTab === 'rencana'" x-cloak x-transition.opacity>
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold text-gray-800">Rencana Belanja & Kebutuhan</h2>
-            </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <!-- Form Input -->
-                <div class="lg:col-span-1">
-                    <div class="bg-white rounded-xl shadow-sm p-6 sticky top-24">
-                        <h3 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Tambah Daftar</h3>
-                        <p class="text-xs text-gray-500 mb-4">List barang yang ingin dibeli atau tagihan yang harus dibayar bulan ini.</p>
-
-                        <form @submit.prevent="tambahRencana">
-                            <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Nama Barang / Kebutuhan</label>
-                                <input type="text" required x-model="formRencana.nama" placeholder="Contoh: Beli Kulkas, Service Motor..."
-                                       class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 p-2 border">
-                            </div>
-                            <div class="mb-6">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Estimasi Biaya (Rp)</label>
-                                <input type="number" required min="1" x-model.number="formRencana.harga" placeholder="Contoh: 500000"
-                                       class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 p-2 border">
-                            </div>
-                            <button type="submit" class="w-full bg-primary hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md transition duration-200">
-                                <i class="fas fa-plus mr-2"></i> Tambahkan ke Daftar
-                            </button>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- List Kebutuhan Table -->
-                <div class="lg:col-span-2">
-                    <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-                        <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
-                            <h3 class="text-lg font-bold text-gray-800">Daftar List (Total: <span x-text="rencanaBelanja.length"></span> Item)</h3>
-                        </div>
-                        
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">Status</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Kebutuhan</th>
-                                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Estimasi Harga</th>
-                                        <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-16">Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white divide-y divide-gray-200">
-                                    <tr x-show="rencanaBelanja.length === 0">
-                                        <td colspan="4" class="px-6 py-8 text-center text-gray-500">
-                                            <i class="fas fa-clipboard-list text-3xl mb-2 text-gray-300"></i>
-                                            <p>Daftar belanjaan Anda masih kosong.</p>
-                                        </td>
-                                    </tr>
+                                <tbody class="bg-white divide-y divide-gray-100">
+                                    <tr x-show="rencanaBelanja.length === 0"><td colspan="3" class="px-6 py-8 text-center text-gray-400">Daftar belanja kosong.</td></tr>
                                     <template x-for="r in rencanaBelanja" :key="r.id">
-                                        <tr class="hover:bg-gray-50 transition" :class="r.status ? 'bg-gray-100' : ''">
-                                            <td class="px-4 py-4 whitespace-nowrap text-center">
-                                                <input type="checkbox" :checked="r.status" @change="toggleRencana(r.id)" 
-                                                       class="w-5 h-5 text-primary rounded border-gray-300 focus:ring-primary cursor-pointer"
-                                                       title="Tandai sudah dibeli">
+                                        <tr class="hover:bg-gray-50 transition" :class="r.status ? 'bg-gray-50 opacity-70' : ''">
+                                            <td class="px-4 py-3 w-12 text-center">
+                                                <input type="checkbox" :checked="r.status" @change="toggleRencana(r.id, r.status)" class="w-5 h-5 text-primary rounded cursor-pointer">
                                             </td>
-                                            <td class="px-6 py-4">
-                                                <span class="text-sm font-medium" :class="r.status ? 'line-through text-gray-400' : 'text-gray-900'" x-text="r.nama"></span>
+                                            <td class="px-6 py-3">
+                                                <span class="text-sm font-medium text-gray-800" :class="r.status ? 'line-through text-gray-500' : ''" x-text="r.nama"></span>
                                             </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-medium">
-                                                <span :class="r.status ? 'line-through text-gray-400' : 'text-gray-800'" x-text="formatRupiah(r.harga)"></span>
-                                            </td>
-                                            <td class="px-4 py-4 whitespace-nowrap text-center text-sm font-medium">
-                                                <button @click="hapusRencana(r.id)" class="text-red-500 hover:text-red-700 p-1" title="Hapus">
-                                                    <i class="fas fa-trash-alt"></i>
-                                                </button>
+                                            <td class="px-6 py-3 text-right text-sm font-medium text-gray-700" :class="r.status ? 'line-through text-gray-400' : ''" x-text="formatRupiah(r.harga)"></td>
+                                            <td class="px-4 py-3 text-center w-12">
+                                                <button @click="konfirmasiHapus('rencana', r.id, 'Hapus item ini?')" class="text-gray-400 hover:text-red-500 p-1"><i class="fas fa-trash"></i></button>
                                             </td>
                                         </tr>
                                     </template>
                                 </tbody>
-                                <tfoot class="bg-gray-50 border-t-2 border-gray-200">
+                                <tfoot class="bg-blue-50 border-t-2 border-blue-100">
                                     <tr>
-                                        <td colspan="2" class="px-6 py-3 text-right text-sm font-medium text-gray-600">Total Semua Estimasi:</td>
-                                        <td class="px-6 py-3 text-right text-sm font-bold text-gray-700" x-text="formatRupiah(totalRencana)"></td>
-                                        <td></td>
-                                    </tr>
-                                    <tr class="bg-blue-50 border-t border-blue-100">
-                                        <td colspan="2" class="px-6 py-4 text-right text-sm font-bold text-primary">Sisa Dana Dibutuhkan (Belum Dibeli):</td>
-                                        <td class="px-6 py-4 text-right text-base font-bold text-primary" x-text="formatRupiah(totalRencanaBelumDibeli)"></td>
+                                        <td colspan="2" class="px-6 py-4 text-right text-sm font-bold text-primary">Total Sisa Dana Dibutuhkan (Belum Dibeli):</td>
+                                        <td class="px-6 py-4 text-right text-lg font-bold text-primary" x-text="formatRupiah(totalRencanaBelumDibeli)"></td>
                                         <td></td>
                                     </tr>
                                 </tfoot>
@@ -562,264 +485,304 @@
                     </div>
                 </div>
             </div>
+        </main>
+    </div>
+
+    <!-- Modal Konfirmasi Custom (Pengganti alert/confirm bawaan browser) -->
+    <div x-show="showConfirmModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50 p-4 transition-opacity">
+        <div class="bg-white p-6 rounded-xl shadow-xl max-w-sm w-full transform transition-all" @click.away="showConfirmModal = false">
+            <h3 class="text-lg font-bold mb-3 text-gray-800"><i class="fas fa-question-circle text-primary mr-2"></i>Konfirmasi</h3>
+            <p class="text-gray-600 mb-6 text-sm" x-text="confirmMessage"></p>
+            <div class="flex justify-end gap-3">
+                <button @click="showConfirmModal = false" class="px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition">Batal</button>
+                <button @click="eksekusiHapus()" class="px-4 py-2 bg-red-500 text-white font-medium rounded-lg hover:bg-red-600 transition">Ya, Hapus</button>
+            </div>
         </div>
+    </div>
 
-    </main>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, collection, onSnapshot, addDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import Alpine from "https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/module.esm.js";
 
-    <!-- Script Logika Aplikasi (Alpine.js) -->
-    <script>
-        // Mencegah Alpine berkedip saat dimuat
-        document.addEventListener('alpine:init', () => {
-            Alpine.data('keuanganApp', () => ({
-                // --- STATE & DATA ---
-                activeTab: 'dashboard',
+        // ==============================================================================
+        // PENTING: KONFIGURASI FIREBASE ANDA DI SINI
+        // Ganti nilai-nilai di bawah ini dengan milik Anda dari Firebase Console!
+        // ==============================================================================
+        const myFirebaseConfig = {
+  apiKey: "AIzaSyBxwN5P7zn9dtGCjiDCyJishXmT3YfFBIQ",
+  authDomain: "keuanganku-35536.firebaseapp.com",
+  projectId: "keuanganku-35536",
+  storageBucket: "keuanganku-35536.firebasestorage.app",
+  messagingSenderId: "823035782464",
+  appId: "1:823035782464:web:0463b9b3e1bdfa0d95c6a5",
+  measurementId: "G-VRSCP7ZHD7"
+};
+        // ==============================================================================
+
+        // Deteksi apakah sedang berjalan di dalam Canvas environment atau External (GitHub Pages)
+        let finalConfig = myFirebaseConfig;
+        if (typeof __firebase_config !== 'undefined') {
+            finalConfig = JSON.parse(__firebase_config); // Mode Canvas Auto-Config
+        }
+
+        const isConfigured = finalConfig.apiKey && finalConfig.apiKey !== "ISI_API_KEY_ANDA";
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'keuanganku-pribadi';
+
+        let app, auth, db;
+        if (isConfigured) {
+            app = initializeApp(finalConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+        }
+
+        Alpine.data('keuanganApp', () => ({
+            // State Auth & UI
+            authState: isConfigured ? 'loading' : 'setup_required', // 'loading', 'unauthenticated', 'authenticated', 'setup_required'
+            user: null,
+            userEmail: '',
+            isLoginMode: true,
+            isAuthLoading: false,
+            authError: '',
+            authForm: { email: '', password: '' },
+            activeTab: 'dashboard',
+            
+            // State Custom Confirm Modal
+            showConfirmModal: false,
+            confirmMessage: '',
+            hapusTarget: null, // { tipe: 'transaksi'|'investasi'|'rencana', id: string }
+
+            // State Data Cloud
+            transaksi: [],
+            investasiList: [],
+            rencanaBelanja: [],
+            
+            // State Form
+            filterBulan: new Date().toISOString().slice(0, 7),
+            formTransaksi: { jenis: 'pengeluaran', tanggal: new Date().toISOString().split('T')[0], kategori: '', jumlah: '', keterangan: '' },
+            formInvestasi: { id: null, nama: '', modal: '', nilaiSekarang: '' },
+            formRencana: { nama: '', harga: '' },
+            
+            // Unsubscribers untuk realtime listener
+            unsubTransaksi: null, unsubInvestasi: null, unsubRencana: null,
+
+            init() {
+                if (!isConfigured) return; // Stop jika firebase belum di set oleh user di github
                 
-                // State Transaksi
-                transaksi: JSON.parse(localStorage.getItem('keuangan_transaksi')) || [],
-                formTransaksi: {
-                    jenis: 'pengeluaran',
-                    tanggal: new Date().toISOString().split('T')[0],
-                    kategori: '',
-                    jumlah: '',
-                    keterangan: ''
-                },
-                // Mengatur default filter bulan ke bulan ini (Format YYYY-MM)
-                filterBulan: new Date().toISOString().slice(0, 7),
-                
-                // State Investasi
-                investasiList: JSON.parse(localStorage.getItem('keuangan_investasi')) || [],
-                formInvestasi: {
-                    id: null,
-                    nama: '',
-                    jenis: '',
-                    modal: '',
-                    nilaiSekarang: ''
-                },
-
-                // State Rencana Belanja
-                rencanaBelanja: JSON.parse(localStorage.getItem('keuangan_rencana')) || [],
-                formRencana: {
-                    nama: '',
-                    harga: ''
-                },
-
-                // --- INIT & WATCHERS ---
-                init() {
-                    // Menyimpan data otomatis ke localStorage setiap ada perubahan
-                    this.$watch('transaksi', val => localStorage.setItem('keuangan_transaksi', JSON.stringify(val)));
-                    this.$watch('investasiList', val => localStorage.setItem('keuangan_investasi', JSON.stringify(val)));
-                    this.$watch('rencanaBelanja', val => localStorage.setItem('keuangan_rencana', JSON.stringify(val)));
-                },
-
-                // --- COMPUTED PROPERTIES (RUMUS-RUMUS) ---
-                
-                // Mendapatkan nama bulan untuk tampilan (misal: "September 2026")
-                get currentMonthName() {
-                    if(!this.filterBulan) return "";
-                    const [year, month] = this.filterBulan.split('-');
-                    const date = new Date(year, month - 1);
-                    return date.toLocaleString('id-ID', { month: 'long', year: 'numeric' });
-                },
-
-                // Memfilter transaksi berdasarkan bulan yang dipilih di input (filterBulan)
-                get transaksiTampil() {
-                    if (!this.filterBulan) return this.transaksi.sort((a,b) => new Date(b.tanggal) - new Date(a.tanggal));
-                    
-                    return this.transaksi.filter(t => {
-                        return t.tanggal.startsWith(this.filterBulan);
-                    }).sort((a,b) => new Date(b.tanggal) - new Date(a.tanggal)); // Urutkan terbaru di atas
-                },
-
-                // Total Pemasukan berdasarkan filter bulan
-                get totalPemasukanFilter() {
-                    return this.transaksiTampil
-                        .filter(t => t.jenis === 'pemasukan')
-                        .reduce((sum, t) => sum + parseFloat(t.jumlah), 0);
-                },
-
-                // Total Pengeluaran berdasarkan filter bulan
-                get totalPengeluaranFilter() {
-                    return this.transaksiTampil
-                        .filter(t => t.jenis === 'pengeluaran')
-                        .reduce((sum, t) => sum + parseFloat(t.jumlah), 0);
-                },
-                
-                // Alias untuk Dashboard (menggunakan filter bulan aktif)
-                get totalPemasukanBulanIni() { return this.totalPemasukanFilter; },
-                get totalPengeluaranBulanIni() { return this.totalPengeluaranFilter; },
-
-                // Menghitung pengeluaran berdasarkan kategori untuk bulan aktif (Dashboard)
-                get pengeluaranPerKategori() {
-                    const pengeluaran = this.transaksiTampil.filter(t => t.jenis === 'pengeluaran');
-                    const hasil = {};
-                    pengeluaran.forEach(t => {
-                        if (hasil[t.kategori]) {
-                            hasil[t.kategori] += parseFloat(t.jumlah);
-                        } else {
-                            hasil[t.kategori] = parseFloat(t.jumlah);
-                        }
-                    });
-                    
-                    // Urutkan dari yang terbesar
-                    return Object.fromEntries(
-                        Object.entries(hasil).sort(([,a], [,b]) => b - a)
-                    );
-                },
-
-                // --- RUMUS INVESTASI ---
-                get totalModalInvestasi() {
-                    return this.investasiList.reduce((sum, item) => sum + parseFloat(item.modal), 0);
-                },
-                get totalNilaiInvestasi() {
-                    return this.investasiList.reduce((sum, item) => sum + parseFloat(item.nilaiSekarang), 0);
-                },
-                get totalKeuntunganInvestasi() {
-                    return this.totalNilaiInvestasi - this.totalModalInvestasi;
-                },
-
-                // --- RUMUS RENCANA BELANJA ---
-                get totalRencana() {
-                    return this.rencanaBelanja.reduce((sum, item) => sum + parseFloat(item.harga), 0);
-                },
-                get totalRencanaBelumDibeli() {
-                    return this.rencanaBelanja
-                        .filter(item => !item.status) // filter yang belum dicentang (status: false)
-                        .reduce((sum, item) => sum + parseFloat(item.harga), 0);
-                },
-
-                // --- METODE / AKSI ---
-
-                tambahTransaksi() {
-                    // Validasi sederhana
-                    if(!this.formTransaksi.kategori || !this.formTransaksi.jumlah) return;
-
-                    const transaksiBaru = {
-                        id: Date.now().toString(), // ID unik
-                        jenis: this.formTransaksi.jenis,
-                        tanggal: this.formTransaksi.tanggal,
-                        kategori: this.formTransaksi.kategori,
-                        jumlah: parseFloat(this.formTransaksi.jumlah),
-                        keterangan: this.formTransaksi.keterangan
-                    };
-
-                    // Tambahkan ke array transaksi
-                    this.transaksi.push(transaksiBaru);
-
-                    // Reset Form (kecuali tanggal dan jenis)
-                    this.formTransaksi.kategori = '';
-                    this.formTransaksi.jumlah = '';
-                    this.formTransaksi.keterangan = '';
-                    
-                    // Otomatis ubah filter bulan ke bulan transaksi yang baru ditambahkan
-                    this.filterBulan = this.formTransaksi.tanggal.substring(0, 7);
-                    
-                    // Optional: Tampilkan feedback ke user, tapi di sini update langsung terlihat di UI
-                },
-
-                hapusTransaksi(id) {
-                    if(confirm('Apakah Anda yakin ingin menghapus transaksi ini?')) {
-                        this.transaksi = this.transaksi.filter(t => t.id !== id);
-                    }
-                },
-
-                simpanInvestasi() {
-                    if(!this.formInvestasi.nama || !this.formInvestasi.jenis) return;
-
-                    if (this.formInvestasi.id) {
-                        // Mode Update (Edit)
-                        const index = this.investasiList.findIndex(i => i.id === this.formInvestasi.id);
-                        if(index !== -1) {
-                            this.investasiList[index] = {
-                                id: this.formInvestasi.id,
-                                nama: this.formInvestasi.nama,
-                                jenis: this.formInvestasi.jenis,
-                                modal: parseFloat(this.formInvestasi.modal),
-                                nilaiSekarang: parseFloat(this.formInvestasi.nilaiSekarang)
-                            };
-                        }
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        this.user = user;
+                        this.userEmail = user.email || 'Pengguna Canvas';
+                        this.setupDatabaseListeners();
+                        this.authState = 'authenticated';
                     } else {
-                        // Mode Tambah Baru
-                        const asetBaru = {
-                            id: Date.now().toString(),
-                            nama: this.formInvestasi.nama,
-                            jenis: this.formInvestasi.jenis,
-                            modal: parseFloat(this.formInvestasi.modal),
-                            nilaiSekarang: parseFloat(this.formInvestasi.nilaiSekarang)
-                        };
-                        this.investasiList.push(asetBaru);
+                        // Coba login otomatis jika di Canvas
+                        if (typeof __initial_auth_token !== 'undefined') {
+                            try {
+                                await signInWithCustomToken(auth, __initial_auth_token);
+                                return; // Biarkan onAuthStateChanged jalan lagi
+                            } catch (e) { console.error("Canvas Auth Gagal", e); }
+                        }
+                        this.cleanupDatabaseListeners();
+                        this.user = null;
+                        this.authState = 'unauthenticated';
                     }
+                });
+            },
 
-                    // Reset form
-                    this.resetFormInvestasi();
-                },
+            // --- FUNGSI AUTENTIKASI ---
+            toggleAuthMode() {
+                this.isLoginMode = !this.isLoginMode;
+                this.authError = '';
+            },
 
-                editInvestasi(aset) {
-                    // Isi form dengan data yang mau diedit
-                    this.formInvestasi.id = aset.id;
-                    this.formInvestasi.nama = aset.nama;
-                    this.formInvestasi.jenis = aset.jenis;
-                    this.formInvestasi.modal = aset.modal;
-                    this.formInvestasi.nilaiSekarang = aset.nilaiSekarang;
-                    
-                    // Scroll ke form (opsional UX)
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                },
-
-                hapusInvestasi(id) {
-                    if(confirm('Hapus aset ini dari pencatatan portofolio?')) {
-                        this.investasiList = this.investasiList.filter(i => i.id !== id);
-                    }
-                },
-                
-                resetFormInvestasi() {
-                    this.formInvestasi = {
-                        id: null,
-                        nama: '',
-                        jenis: '',
-                        modal: '',
-                        nilaiSekarang: ''
-                    };
-                },
-
-                // --- AKSI RENCANA BELANJA ---
-                tambahRencana() {
-                    if(!this.formRencana.nama || !this.formRencana.harga) return;
-
-                    this.rencanaBelanja.push({
-                        id: Date.now().toString(),
-                        nama: this.formRencana.nama,
-                        harga: parseFloat(this.formRencana.harga),
-                        status: false // Default: belum dibeli
-                    });
-
-                    this.formRencana.nama = '';
-                    this.formRencana.harga = '';
-                },
-                
-                hapusRencana(id) {
-                    if(confirm('Hapus item ini dari rencana belanja?')) {
-                        this.rencanaBelanja = this.rencanaBelanja.filter(r => r.id !== id);
-                    }
-                },
-                
-                toggleRencana(id) {
-                    const item = this.rencanaBelanja.find(r => r.id === id);
-                    if(item) {
-                        item.status = !item.status; // Balikkan status dari true ke false, atau sebaliknya
-                    }
-                },
-
-                // Utility Helper
-                formatTanggal(dateString) {
-                    const options = { day: '2-digit', month: 'short', year: 'numeric' };
-                    return new Date(dateString).toLocaleDateString('id-ID', options);
+            async handleAuth() {
+                if (!this.authForm.email || !this.authForm.password) {
+                    this.authError = "Email dan password wajib diisi!"; return;
                 }
-            }));
-        });
+                this.isAuthLoading = true; this.authError = '';
+                try {
+                    if (this.isLoginMode) {
+                        await signInWithEmailAndPassword(auth, this.authForm.email, this.authForm.password);
+                    } else {
+                        await createUserWithEmailAndPassword(auth, this.authForm.email, this.authForm.password);
+                    }
+                    this.authForm = {email:'', password:''};
+                } catch (error) {
+                    // Menerjemahkan error Firebase ke bahasa yang mudah dimengerti
+                    if(error.code === 'auth/email-already-in-use') this.authError = 'Email ini sudah terdaftar.';
+                    else if(error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') this.authError = 'Email atau password salah.';
+                    else if(error.code === 'auth/weak-password') this.authError = 'Password terlalu lemah (minimal 6 karakter).';
+                    else this.authError = error.message;
+                } finally {
+                    this.isAuthLoading = false;
+                }
+            },
+
+            konfirmasiLogout() {
+                this.confirmMessage = "Apakah Anda yakin ingin keluar dari akun?";
+                this.hapusTarget = { tipe: 'logout' };
+                this.showConfirmModal = true;
+            },
+
+            // --- DATABASE CLOUD FIRESTORE ---
+            setupDatabaseListeners() {
+                if (!this.user) return;
+                const uid = this.user.uid;
+                
+                // 1. Transaksi (Tanpa query rumit, fetch semua lalu sort lokal sesuai instruksi sistem)
+                const colTransaksi = collection(db, 'artifacts', appId, 'users', uid, 'transaksi');
+                this.unsubTransaksi = onSnapshot(colTransaksi, (snapshot) => {
+                    const data = [];
+                    snapshot.forEach(doc => Object.assign(data, { [data.length]: { id: doc.id, ...doc.data() } }));
+                    this.transaksi = data.sort((a,b) => new Date(b.tanggal) - new Date(a.tanggal));
+                }, (error) => { console.error("Error Transaksi:", error); });
+
+                // 2. Investasi
+                const colInvestasi = collection(db, 'artifacts', appId, 'users', uid, 'investasi');
+                this.unsubInvestasi = onSnapshot(colInvestasi, (snapshot) => {
+                    const data = [];
+                    snapshot.forEach(doc => Object.assign(data, { [data.length]: { id: doc.id, ...doc.data() } }));
+                    this.investasiList = data;
+                }, (error) => { console.error("Error Investasi:", error); });
+
+                // 3. Rencana
+                const colRencana = collection(db, 'artifacts', appId, 'users', uid, 'rencana');
+                this.unsubRencana = onSnapshot(colRencana, (snapshot) => {
+                    const data = [];
+                    snapshot.forEach(doc => Object.assign(data, { [data.length]: { id: doc.id, ...doc.data() } }));
+                    this.rencanaBelanja = data;
+                }, (error) => { console.error("Error Rencana:", error); });
+            },
+
+            cleanupDatabaseListeners() {
+                if (this.unsubTransaksi) this.unsubTransaksi();
+                if (this.unsubInvestasi) this.unsubInvestasi();
+                if (this.unsubRencana) this.unsubRencana();
+            },
+
+            // --- FUNGSI CLOUD CRUD ---
+            async tambahTransaksi() {
+                if(!this.formTransaksi.kategori || !this.formTransaksi.jumlah || !this.user) return;
+                const ref = collection(db, 'artifacts', appId, 'users', this.user.uid, 'transaksi');
+                await addDoc(ref, {
+                    jenis: this.formTransaksi.jenis, tanggal: this.formTransaksi.tanggal,
+                    kategori: this.formTransaksi.kategori, jumlah: parseFloat(this.formTransaksi.jumlah),
+                    keterangan: this.formTransaksi.keterangan
+                });
+                this.formTransaksi.kategori = ''; this.formTransaksi.jumlah = ''; this.formTransaksi.keterangan = '';
+                this.filterBulan = this.formTransaksi.tanggal.substring(0, 7);
+            },
+
+            async simpanInvestasi() {
+                if(!this.formInvestasi.nama || !this.user) return;
+                const colRef = collection(db, 'artifacts', appId, 'users', this.user.uid, 'investasi');
+                
+                if (this.formInvestasi.id) { // Update
+                    const docRef = doc(colRef, this.formInvestasi.id);
+                    await updateDoc(docRef, {
+                        nama: this.formInvestasi.nama, modal: parseFloat(this.formInvestasi.modal), nilaiSekarang: parseFloat(this.formInvestasi.nilaiSekarang)
+                    });
+                } else { // Baru
+                    await addDoc(colRef, {
+                        nama: this.formInvestasi.nama, modal: parseFloat(this.formInvestasi.modal), nilaiSekarang: parseFloat(this.formInvestasi.nilaiSekarang)
+                    });
+                }
+                this.resetFormInvestasi();
+            },
+
+            async tambahRencana() {
+                if(!this.formRencana.nama || !this.formRencana.harga || !this.user) return;
+                const ref = collection(db, 'artifacts', appId, 'users', this.user.uid, 'rencana');
+                await addDoc(ref, {
+                    nama: this.formRencana.nama, harga: parseFloat(this.formRencana.harga), status: false
+                });
+                this.formRencana.nama = ''; this.formRencana.harga = '';
+            },
+
+            async toggleRencana(id, currentStatus) {
+                if(!this.user) return;
+                const docRef = doc(db, 'artifacts', appId, 'users', this.user.uid, 'rencana', id);
+                await updateDoc(docRef, { status: !currentStatus });
+            },
+
+            // --- SISTEM MODAL KONFIRMASI PENGHAPUSAN ---
+            konfirmasiHapus(tipe, id, pesan) {
+                this.confirmMessage = pesan;
+                this.hapusTarget = { tipe, id };
+                this.showConfirmModal = true;
+            },
+
+            async eksekusiHapus() {
+                if(!this.user || !this.hapusTarget) return;
+                try {
+                    if(this.hapusTarget.tipe === 'logout') {
+                        await signOut(auth);
+                    } else {
+                        const docRef = doc(db, 'artifacts', appId, 'users', this.user.uid, this.hapusTarget.tipe, this.hapusTarget.id);
+                        await deleteDoc(docRef);
+                    }
+                } catch(e) { console.error("Gagal hapus:", e); }
+                this.showConfirmModal = false;
+                this.hapusTarget = null;
+            },
+
+            // --- COMPUTED PROPERTIES ---
+            get currentMonthName() {
+                if(!this.filterBulan) return "";
+                const [year, month] = this.filterBulan.split('-');
+                return new Date(year, month - 1).toLocaleString('id-ID', { month: 'long', year: 'numeric' });
+            },
+
+            get transaksiTampil() {
+                if (!this.filterBulan) return this.transaksi;
+                return this.transaksi.filter(t => t.tanggal.startsWith(this.filterBulan));
+            },
+
+            get totalPemasukanFilter() { return this.transaksiTampil.filter(t => t.jenis === 'pemasukan').reduce((sum, t) => sum + t.jumlah, 0); },
+            get totalPengeluaranFilter() { return this.transaksiTampil.filter(t => t.jenis === 'pengeluaran').reduce((sum, t) => sum + t.jumlah, 0); },
+            get totalPemasukanBulanIni() { return this.totalPemasukanFilter; },
+            get totalPengeluaranBulanIni() { return this.totalPengeluaranFilter; },
+
+            // HISTORI BULANAN (BARU) - Mengelompokkan transaksi per bulan
+            get historiBulanan() {
+                const grup = {};
+                this.transaksi.forEach(t => {
+                    const bulan = t.tanggal.substring(0, 7); // Format: YYYY-MM
+                    if(!grup[bulan]) grup[bulan] = { pemasukan: 0, pengeluaran: 0 };
+                    if(t.jenis === 'pemasukan') grup[bulan].pemasukan += t.jumlah;
+                    if(t.jenis === 'pengeluaran') grup[bulan].pengeluaran += t.jumlah;
+                });
+                // Ubah object ke array, hitung saldo, lalu urutkan dari bulan paling baru ke terlama
+                return Object.keys(grup).sort().reverse().map(bulan => ({
+                    bulan: bulan,
+                    pemasukan: grup[bulan].pemasukan,
+                    pengeluaran: grup[bulan].pengeluaran,
+                    saldo: grup[bulan].pemasukan - grup[bulan].pengeluaran
+                }));
+            },
+
+            get totalModalInvestasi() { return this.investasiList.reduce((sum, i) => sum + i.modal, 0); },
+            get totalNilaiInvestasi() { return this.investasiList.reduce((sum, i) => sum + i.nilaiSekarang, 0); },
+            get totalKeuntunganInvestasi() { return this.totalNilaiInvestasi - this.totalModalInvestasi; },
+            get totalRencanaBelumDibeli() { return this.rencanaBelanja.filter(r => !r.status).reduce((sum, r) => sum + r.harga, 0); },
+
+            // --- UTILITAS ---
+            editInvestasi(aset) {
+                this.formInvestasi = { id: aset.id, nama: aset.nama, modal: aset.modal, nilaiSekarang: aset.nilaiSekarang };
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            },
+            resetFormInvestasi() { this.formInvestasi = { id: null, nama: '', modal: '', nilaiSekarang: '' }; },
+            formatTanggal(dateString) { return new Date(dateString).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }); },
+            formatNamaBulanTahun(YYYYMM) {
+                const [year, month] = YYYYMM.split('-');
+                return new Date(year, month - 1).toLocaleString('id-ID', { month: 'long', year: 'numeric' });
+            }
+        }));
+        
+        // Memulai Alpine JS setelah semua modul di-load
+        Alpine.start();
     </script>
-    <style>
-        /* Untuk menyembunyikan elemen sebelum Alpine.js dimuat untuk mencegah flicker (kedipan) kode */
-        [x-cloak] { display: none !important; }
-    </style>
 </body>
 </html>
