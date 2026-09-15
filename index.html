@@ -153,9 +153,13 @@
             <div class="mt-auto p-6 border-t border-slate-100">
                 <div class="flex items-center gap-3 mb-4">
                     <div class="w-9 h-9 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 font-bold" x-text="userEmail.charAt(0).toUpperCase()"></div>
-                    <div class="overflow-hidden">
+                    <div class="overflow-hidden flex-1">
                         <p class="text-sm font-semibold text-slate-800 truncate" x-text="userEmail"></p>
-                        <p class="text-xs text-slate-500">Free Plan</p>
+                        <button @click="showPremiumModal = true" class="text-[10px] font-bold px-2 py-0.5 rounded-md mt-1 transition-colors"
+                            :class="isPremium ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-500 hover:bg-brand-50 hover:text-brand-600'">
+                            <i class="fas" :class="isPremium ? 'fa-crown' : 'fa-star'"></i> 
+                            <span x-text="isPremium ? 'Premium Plan' : 'Free Plan - Upgrade'"></span>
+                        </button>
                     </div>
                 </div>
                 <button @click="konfirmasiLogout()" class="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-500 hover:bg-red-50 rounded-xl transition-colors font-medium">
@@ -541,6 +545,19 @@
                         <div class="p-6 border-b border-slate-100 bg-slate-50/50">
                             <form @submit.prevent="tambahRencana" class="flex flex-col sm:flex-row gap-3">
                                 <input type="text" required x-model="formRencana.nama" placeholder="Beli apa hari ini?" class="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 text-sm">
+                                
+                                <select required x-model="formRencana.kategori" class="w-full sm:w-40 px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 text-sm appearance-none cursor-pointer">
+                                    <option value="" disabled selected>Kategori</option>
+                                    <option value="Makanan">Makanan</option>
+                                    <option value="Transportasi">Transportasi</option>
+                                    <option value="Tagihan">Tagihan</option>
+                                    <option value="Tempat Tinggal">Tempat Tinggal</option>
+                                    <option value="Belanja">Belanja</option>
+                                    <option value="Hiburan">Hiburan</option>
+                                    <option value="Tabungan/Investasi">Tabungan/Investasi</option>
+                                    <option value="Lainnya">Lainnya</option>
+                                </select>
+
                                 <div class="relative sm:w-48">
                                     <span class="absolute left-3 top-3 text-slate-400 text-sm font-medium">Rp</span>
                                     <input type="number" required min="1" x-model.number="formRencana.harga" placeholder="0" class="w-full pl-9 pr-3 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 text-sm font-bold">
@@ -560,14 +577,15 @@
                             
                             <template x-for="r in rencanaBelanja" :key="r.id">
                                 <div class="p-4 sm:px-6 hover:bg-slate-50 flex items-center gap-4 transition-colors group" :class="r.status ? 'opacity-60 bg-slate-50' : ''">
-                                    <label class="relative flex items-center cursor-pointer">
-                                        <input type="checkbox" :checked="r.status" @change="toggleRencana(r.id, r.status)" class="peer sr-only">
+                                    <label class="relative flex items-center cursor-pointer shrink-0">
+                                        <input type="checkbox" :checked="r.status" @change="toggleRencana(r.id, r.status, r)" class="peer sr-only">
                                         <div class="w-6 h-6 rounded-lg border-2 border-slate-300 peer-checked:bg-brand-500 peer-checked:border-brand-500 flex items-center justify-center transition-all">
                                             <i class="fas fa-check text-white text-xs opacity-0 peer-checked:opacity-100"></i>
                                         </div>
                                     </label>
                                     <div class="flex-1 min-w-0">
                                         <p class="font-bold text-sm sm:text-base truncate transition-all" :class="r.status ? 'line-through text-slate-500' : 'text-slate-800'" x-text="r.nama"></p>
+                                        <p class="text-[10px] sm:text-xs font-semibold mt-0.5 text-slate-400 uppercase tracking-wider" x-show="r.kategori" x-text="r.kategori"></p>
                                     </div>
                                     <div class="font-bold text-sm sm:text-base whitespace-nowrap" :class="r.status ? 'text-slate-400' : 'text-slate-700'" x-text="formatRupiah(r.harga)"></div>
                                     <button @click="konfirmasiHapus('rencana', r.id, 'Hapus dari daftar?')" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 transition sm:opacity-0 group-hover:opacity-100 shrink-0">
@@ -609,10 +627,34 @@
         </div>
     </div>
 
+    <!-- Modal Premium -->
+    <div x-show="showPremiumModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 transition-opacity">
+        <div class="bg-white p-8 rounded-3xl shadow-float max-w-sm w-full transform transition-all scale-100 text-center" @click.away="showPremiumModal = false">
+            <div class="w-16 h-16 mx-auto bg-gradient-to-tr from-amber-400 to-orange-500 text-white rounded-full flex items-center justify-center text-3xl mb-4 shadow-lg"><i class="fas fa-crown"></i></div>
+            <h3 class="text-2xl font-extrabold mb-2 text-slate-800">Premium Plan</h3>
+            
+            <div x-show="isPremium" class="text-slate-600 mb-6 text-sm">
+                <p>Terima kasih! Anda sudah menjadi pengguna <b>Premium</b>.</p>
+            </div>
+
+            <div x-show="!isPremium">
+                <p class="text-slate-500 mb-6 text-sm leading-relaxed">Dapatkan fitur Premium secara <b>Gratis</b> selamanya! Syaratnya cukup follow Instagram developer.</p>
+                <button @click="upgradePremium()" class="w-full py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-xl hover:shadow-lg hover:shadow-pink-500/30 transition-all text-sm flex items-center justify-center gap-2 mb-3">
+                    <i class="fab fa-instagram text-lg"></i> Follow & Aktifkan
+                </button>
+                <button @click="showPremiumModal = false" class="text-slate-400 hover:text-slate-600 text-sm font-medium transition-colors">Nanti Saja</button>
+            </div>
+            
+            <div x-show="isPremium">
+                 <button @click="showPremiumModal = false" class="px-6 py-2.5 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors text-sm">Tutup</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, collection, onSnapshot, addDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, collection, onSnapshot, addDoc, updateDoc, deleteDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import Alpine from "https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/module.esm.js";
 
         // ==============================================================================
@@ -660,16 +702,16 @@
             
             // Modal & Data
             showConfirmModal: false, confirmMessage: '', hapusTarget: null,
+            showPremiumModal: false, isPremium: false,
             transaksi: [], investasiList: [], rencanaBelanja: [],
             
             // Forms
             filterBulan: new Date().toISOString().slice(0, 7),
             formTransaksi: { jenis: 'pengeluaran', tanggal: new Date().toISOString().split('T')[0], kategori: '', jumlah: '', keterangan: '' },
             formInvestasi: { id: null, nama: '', modal: '', nilaiSekarang: '' },
-            formRencana: { nama: '', harga: '' },
+            formRencana: { nama: '', harga: '', kategori: '' },
             
-            unsubTransaksi: null, unsubInvestasi: null, unsubRencana: null,
-
+            unsubTransaksi: null, unsubInvestasi: null, unsubRencana: null, unsubProfile: null,
             init() {
                 if (!isConfigured) return;
                 onAuthStateChanged(auth, async (user) => {
@@ -714,8 +756,13 @@
                     const data = []; snapshot.forEach(doc => data.push({ id: doc.id, ...doc.data() }));
                     this.rencanaBelanja = data;
                 });
+                this.unsubProfile = onSnapshot(doc(db, 'artifacts', appId, 'users', uid, 'profile', 'info'), (doc) => {
+                    if (doc.exists()) {
+                        this.isPremium = doc.data().isPremium || false;
+                    }
+                });
             },
-            cleanupDatabaseListeners() { if(this.unsubTransaksi) this.unsubTransaksi(); if(this.unsubInvestasi) this.unsubInvestasi(); if(this.unsubRencana) this.unsubRencana(); },
+            cleanupDatabaseListeners() { if(this.unsubTransaksi) this.unsubTransaksi(); if(this.unsubInvestasi) this.unsubInvestasi(); if(this.unsubRencana) this.unsubRencana(); if(this.unsubProfile) this.unsubProfile(); },
 
             // --- CRUD ---
             async tambahTransaksi() {
@@ -735,11 +782,55 @@
                 this.resetFormInvestasi();
             },
             async tambahRencana() {
-                if(!this.formRencana.nama || !this.formRencana.harga || !this.user) return;
-                await addDoc(collection(db, 'artifacts', appId, 'users', this.user.uid, 'rencana'), { nama: this.formRencana.nama, harga: parseFloat(this.formRencana.harga), status: false });
-                this.formRencana.nama = ''; this.formRencana.harga = '';
+                if(!this.formRencana.nama || !this.formRencana.harga || !this.formRencana.kategori || !this.user) return;
+                await addDoc(collection(db, 'artifacts', appId, 'users', this.user.uid, 'rencana'), { 
+                    nama: this.formRencana.nama, 
+                    harga: parseFloat(this.formRencana.harga),
+                    kategori: this.formRencana.kategori,
+                    status: false,
+                    transaksiId: null
+                });
+                this.formRencana.nama = ''; this.formRencana.harga = ''; this.formRencana.kategori = '';
             },
-            async toggleRencana(id, currentStatus) { if(!this.user) return; await updateDoc(doc(db, 'artifacts', appId, 'users', this.user.uid, 'rencana', id), { status: !currentStatus }); },
+            async toggleRencana(id, currentStatus, item) { 
+                if(!this.user) return; 
+                
+                const rencanaRef = doc(db, 'artifacts', appId, 'users', this.user.uid, 'rencana', id);
+                
+                if (!currentStatus) {
+                    // Jika di-check (sudah dibeli), catat ke transaksi pengeluaran
+                    const today = new Date().toISOString().split('T')[0];
+                    const txRef = await addDoc(collection(db, 'artifacts', appId, 'users', this.user.uid, 'transaksi'), {
+                        jenis: 'pengeluaran',
+                        tanggal: today,
+                        kategori: item.kategori || 'Lainnya',
+                        jumlah: parseFloat(item.harga),
+                        keterangan: 'Wishlist: ' + item.nama
+                    });
+                    
+                    // Update status wishlist dan simpan ID transaksinya
+                    await updateDoc(rencanaRef, { status: true, transaksiId: txRef.id });
+                } else {
+                    // Jika di-uncheck (batal dibeli), hapus dari transaksi pengeluaran secara otomatis
+                    if (item.transaksiId) {
+                        await deleteDoc(doc(db, 'artifacts', appId, 'users', this.user.uid, 'transaksi', item.transaksiId));
+                    }
+                    
+                    await updateDoc(rencanaRef, { status: false, transaksiId: null });
+                }
+            },
+
+            async upgradePremium() {
+                if(!this.user) return;
+                // Buka tab Instagram di halaman baru
+                window.open('https://www.instagram.com/ggammu__?stkn=MWFoNGRkZDllZXJhbw==', '_blank');
+                
+                // Berikan akses premium & simpan ke database secara permanen
+                setTimeout(async () => {
+                    await setDoc(doc(db, 'artifacts', appId, 'users', this.user.uid, 'profile', 'info'), { isPremium: true }, { merge: true });
+                    this.isPremium = true;
+                }, 1500);
+            },
 
             // --- Delete Modal ---
             konfirmasiHapus(tipe, id, pesan) { this.confirmMessage = pesan; this.hapusTarget = { tipe, id }; this.showConfirmModal = true; },
