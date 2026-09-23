@@ -74,7 +74,6 @@
     <div x-show="authState === 'unauthenticated'" x-cloak class="fixed inset-0 z-40 flex items-center justify-center bg-slate-50 p-4">
         <div class="bg-white p-8 sm:p-10 rounded-2xl shadow-card max-w-md w-full border border-slate-100">
             <div class="text-center mb-8">
-                <!-- MENGGUNAKAN LOGO ANDA -->
                 <div class="w-20 h-20 mx-auto mb-4 bg-white rounded-xl flex items-center justify-center border border-slate-100 overflow-hidden shadow-sm">
                     <img src="./logo.jpg" alt="Logo GamMenkeu" class="w-full h-full object-cover scale-150 transform -translate-y-1" onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\'fas fa-wallet text-3xl text-brand-600\'></i>';">
                 </div>
@@ -117,7 +116,6 @@
         <aside class="hidden md:flex flex-col w-64 bg-white border-r border-slate-200 z-20 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
             <div class="h-20 flex items-center px-6 border-b border-slate-100">
                 <div class="flex items-center gap-3">
-                    <!-- Logo di Sidebar -->
                     <div class="w-10 h-10 rounded-lg overflow-hidden border border-slate-100 flex items-center justify-center bg-white shadow-sm">
                         <img src="./logo.jpg" alt="Logo" class="w-full h-full object-cover scale-150 transform -translate-y-1" onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\'fas fa-wallet text-lg text-brand-600\'></i>';">
                     </div>
@@ -164,7 +162,6 @@
             <!-- Mobile Header -->
             <header class="md:hidden bg-white sticky top-0 z-30 border-b border-slate-200 px-4 py-3 flex justify-between items-center shadow-sm">
                 <div class="flex items-center gap-2">
-                    <!-- Logo di Mobile Header -->
                     <div class="w-8 h-8 rounded-lg overflow-hidden border border-slate-100 flex items-center justify-center bg-white shadow-sm">
                         <img src="./logo.jpg" alt="Logo" class="w-full h-full object-cover scale-150 transform -translate-y-1" onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\'fas fa-wallet text-sm text-brand-600\'></i>';">
                     </div>
@@ -180,7 +177,6 @@
                 </div>
             </header>
 
-            <!-- PADDING BAWAH DITAMBAHKAN DI SINI (pb-56) AGAR TIDAK TERTUTUP KALKULATOR -->
             <div class="max-w-5xl mx-auto p-4 sm:p-8 w-full pb-56 md:pb-32">
                 
                 <!-- TAB: DASHBOARD -->
@@ -192,7 +188,7 @@
                         </div>
                     </header>
                     
-                    <!-- Main Balance Card (Professional Dark Style) -->
+                    <!-- Main Balance Card -->
                     <div class="bg-slate-900 rounded-2xl p-6 sm:p-8 text-white shadow-card mb-6 relative overflow-hidden">
                         <div class="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
                             <i class="fas fa-chart-pie text-9xl"></i>
@@ -216,7 +212,7 @@
                         </div>
                     </div>
 
-                    <!-- 50/30/20 Rule Visualization (Clean UI) -->
+                    <!-- 50/30/20 Rule Visualization -->
                     <div class="bg-white rounded-2xl p-6 shadow-card border border-slate-200">
                         <div class="flex justify-between items-center mb-6">
                             <div>
@@ -316,7 +312,6 @@
                                 <h3 class="text-base font-bold text-slate-900 mb-5">Entri Baru</h3>
                                 
                                 <form @submit.prevent="tambahTransaksi" class="space-y-4">
-                                    <!-- Jenis Toggle Modern -->
                                     <div class="flex p-1 bg-slate-100 rounded-lg relative">
                                         <div class="absolute inset-y-1 w-[calc(50%-4px)] bg-white rounded-md shadow-sm transition-all duration-200"
                                              :class="formTransaksi.jenis === 'pemasukan' ? 'left-1' : 'left-[calc(50%+2px)]'"></div>
@@ -355,11 +350,11 @@
                                     <div>
                                         <div class="flex justify-between items-end mb-1">
                                             <label class="block text-xs font-medium text-slate-600">Nominal</label>
-                                            <!-- Tombol Trigger Kamera/Galeri -->
+                                            <!-- PENTING: Dihapus capture="environment" di sini agar muncul pilihan kamera/galeri -->
                                             <button type="button" @click="$refs.fileInput.click()" class="text-[10px] font-semibold text-brand-600 hover:text-brand-700 bg-brand-50 hover:bg-brand-100 px-2.5 py-1 rounded transition-colors flex items-center gap-1.5">
                                                 <i class="fas fa-camera"></i> Scan Struk (AI)
                                             </button>
-                                            <input type="file" x-ref="fileInput" @change="prosesScanGambar" accept="image/*" capture="environment" class="hidden">
+                                            <input type="file" x-ref="fileInput" @change="prosesScanGambar" accept="image/*" class="hidden">
                                         </div>
                                         <div class="relative">
                                             <span class="absolute left-3 top-2.5 text-slate-400 text-sm">Rp</span>
@@ -390,7 +385,6 @@
                                 <div class="px-5 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                                     <div class="flex items-center gap-3">
                                         <h3 class="text-sm font-bold text-slate-800">Detail Transaksi</h3>
-                                        <!-- Select All Checkbox -->
                                         <label x-show="transaksiTampil.length > 0" class="flex items-center cursor-pointer group">
                                             <input type="checkbox" class="sr-only" @change="toggleSelectAll('transaksiTampil')" :checked="transaksiTampil.length > 0 && selectedTx.length === transaksiTampil.length">
                                             <span class="text-[10px] font-medium text-slate-400 hover:text-brand-600 bg-white border border-slate-200 px-2 py-0.5 rounded transition-colors">Pilih Semua</span>
@@ -399,17 +393,15 @@
                                     <span class="text-xs font-semibold px-2.5 py-1 bg-white border border-slate-200 text-slate-600 rounded-md shadow-sm" x-text="transaksiTampil.length + ' Item'"></span>
                                 </div>
                                 
-                                <div class="divide-y divide-slate-100">
+                                <div class="divide-y divide-slate-100 pb-28">
                                     <div x-show="transaksiTampil.length === 0" class="p-10 text-center text-slate-400 flex flex-col items-center">
                                         <div class="w-12 h-12 bg-slate-50 border border-slate-100 rounded-full flex items-center justify-center mb-3"><i class="fas fa-inbox text-slate-300"></i></div>
                                         <p class="text-sm">Tidak ada data untuk periode ini.</p>
                                     </div>
 
-                                    <!-- Clean List Item with Checkbox -->
                                     <template x-for="t in transaksiTampil" :key="t.id">
                                         <div class="p-4 hover:bg-slate-50 transition-colors flex items-center justify-between group" :class="selectedTx.includes(t.id) ? 'bg-brand-50/30' : ''">
                                             <div class="flex items-center gap-3">
-                                                <!-- Checkbox untuk Kalkulator Pintar -->
                                                 <label class="relative flex items-center cursor-pointer shrink-0">
                                                     <input type="checkbox" :value="t.id" x-model="selectedTx" class="peer sr-only">
                                                     <div class="w-5 h-5 rounded border border-slate-300 peer-checked:bg-brand-600 peer-checked:border-brand-600 flex items-center justify-center transition-all">
@@ -463,7 +455,6 @@
                                 Data historis belum memadai untuk dianalisis.
                             </div>
 
-                            <!-- Clean Bar Chart - Now Clickable -->
                             <div class="space-y-2" x-show="historiBulanan.length > 0">
                                 <template x-for="h in historiBulanan" :key="h.bulan">
                                     <div @click="bukaDetailHistori(h.bulan)" class="flex flex-col md:flex-row gap-2 md:gap-6 md:items-center p-3 -mx-3 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors group">
@@ -515,7 +506,6 @@
                                 </div>
                             </div>
                             
-                            <!-- Pencarian di Detail Histori -->
                             <div class="relative bg-white rounded-xl shadow-sm border border-slate-200 flex items-center w-full sm:w-64">
                                 <span class="absolute left-3 text-slate-400"><i class="fas fa-search text-sm"></i></span>
                                 <input type="text" x-model="searchDetailBulan" placeholder="Cari di bulan ini..." class="w-full pl-9 pr-3 py-2 bg-transparent text-sm text-slate-700 focus:outline-none placeholder-slate-400">
@@ -536,7 +526,7 @@
                                 <span class="text-xs font-semibold px-2.5 py-1 bg-white border border-slate-200 text-slate-600 rounded-md shadow-sm" x-text="detailHistoriTransaksi.length + ' Item'"></span>
                             </div>
                             
-                            <div class="divide-y divide-slate-100">
+                            <div class="divide-y divide-slate-100 pb-28">
                                 <div x-show="detailHistoriTransaksi.length === 0" class="p-10 text-center text-slate-400 flex flex-col items-center">
                                     <div class="w-12 h-12 bg-slate-50 border border-slate-100 rounded-full flex items-center justify-center mb-3"><i class="fas fa-search text-slate-300"></i></div>
                                     <p class="text-sm" x-text="searchDetailBulan ? 'Tidak ada transaksi yang cocok dengan pencarian.' : 'Tidak ada data transaksi di bulan ini.'"></p>
@@ -545,7 +535,6 @@
                                 <template x-for="t in detailHistoriTransaksi" :key="t.id">
                                     <div class="p-4 hover:bg-slate-50 transition-colors flex items-center justify-between group" :class="selectedTx.includes(t.id) ? 'bg-brand-50/30' : ''">
                                         <div class="flex items-center gap-3">
-                                            <!-- Checkbox Kalkulator -->
                                             <label class="relative flex items-center cursor-pointer shrink-0">
                                                 <input type="checkbox" :value="t.id" x-model="selectedTx" class="peer sr-only">
                                                 <div class="w-5 h-5 rounded border border-slate-300 peer-checked:bg-brand-600 peer-checked:border-brand-600 flex items-center justify-center transition-all">
@@ -713,7 +702,7 @@
 
             </div>
 
-            <!-- Kalkulator Pintar Mengambang (Muncul jika ada transaksi yang dicentang) -->
+            <!-- Kalkulator Pintar Mengambang -->
             <div x-show="selectedTx.length > 0" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-10" x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 translate-y-10" x-cloak 
                  class="fixed bottom-20 md:bottom-6 left-1/2 transform -translate-x-1/2 z-40 w-[92%] md:max-w-xl bg-slate-900 text-white rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.3)] px-4 py-3 border border-slate-700 flex flex-wrap justify-between items-center gap-3">
                 
@@ -757,7 +746,7 @@
         </nav>
     </div>
 
-    <!-- Modal Konfirmasi (Clean) -->
+    <!-- Modal Konfirmasi -->
     <div x-show="showConfirmModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 transition-opacity">
         <div class="bg-white p-6 rounded-2xl shadow-floating max-w-sm w-full" @click.away="showConfirmModal = false">
             <h3 class="text-base font-bold mb-2 text-slate-900">Konfirmasi Tindakan</h3>
@@ -769,7 +758,7 @@
         </div>
     </div>
 
-    <!-- Modal Premium (Clean) -->
+    <!-- Modal Premium -->
     <div x-show="showPremiumModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 transition-opacity">
         <div class="bg-white p-8 rounded-2xl shadow-floating max-w-sm w-full text-center" @click.away="showPremiumModal = false">
             <div class="w-14 h-14 mx-auto bg-slate-50 border border-slate-100 text-brand-600 rounded-xl flex items-center justify-center text-2xl mb-4"><i class="fas fa-gem"></i></div>
@@ -842,45 +831,37 @@
                 { id: 'rencana', label: 'Rencana', icon: 'fas fa-clipboard-check' }
             ],
             
-            // Modal & Data
             showConfirmModal: false, confirmMessage: '', hapusTarget: null,
             showPremiumModal: false, isPremium: false,
             transaksi: [], investasiList: [], rencanaBelanja: [],
             
-            // Forms & Filters
             filterBulan: new Date().toISOString().slice(0, 7),
-            searchTransaksi: '', // State pencarian buku kas
-            selectedBulanDetail: null, // State untuk drill-down histori
-            searchDetailBulan: '', // State pencarian di detail histori
+            searchTransaksi: '', 
+            selectedBulanDetail: null, 
+            searchDetailBulan: '', 
             formTransaksi: { jenis: 'pengeluaran', tanggal: new Date().toISOString().split('T')[0], kategori: '', jumlah: '', keterangan: '' },
             formInvestasi: { id: null, nama: '', modal: '', nilaiSekarang: '' },
             formRencana: { nama: '', harga: '', kategori: '' },
             
-            // Scanner OCR State
-            isScanning: false,
-            scanStatus: '',
-            scanSuccess: false,
+            isScanning: false, scanStatus: '', scanSuccess: false,
             
-            // State Multi-Select Calculator
             selectedTx: [], 
 
             unsubTransaksi: null, unsubInvestasi: null, unsubRencana: null, unsubProfile: null,
             
-            // --- Navigasi & Proteksi Fitur Premium ---
             navigate(tabId) {
                 if (tabId === 'investasi' && !this.isPremium) {
                     this.showPremiumModal = true;
                     return;
                 }
                 this.activeTab = tabId;
-                this.selectedTx = []; // Reset kalkulator saat ganti tab
+                this.selectedTx = []; 
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             },
 
             init() {
                 if (!isConfigured) return;
                 
-                // Watcher untuk mereset pilihan kalkulator jika pencarian/filter berubah
                 this.$watch('searchTransaksi', () => this.selectedTx = []);
                 this.$watch('searchDetailBulan', () => this.selectedTx = []);
                 this.$watch('filterBulan', () => this.selectedTx = []);
@@ -898,7 +879,6 @@
                 });
             },
 
-            // --- Auth ---
             toggleAuthMode() { this.isLoginMode = !this.isLoginMode; this.authError = ''; },
             async handleAuth() {
                 if (!this.authForm.email || !this.authForm.password) return;
@@ -912,7 +892,6 @@
             },
             konfirmasiLogout() { this.confirmMessage = "Anda akan mengakhiri sesi saat ini."; this.hapusTarget = { tipe: 'logout' }; this.showConfirmModal = true; },
 
-            // --- Database Setup ---
             setupDatabaseListeners() {
                 const uid = this.user.uid;
                 this.unsubTransaksi = onSnapshot(collection(db, 'artifacts', appId, 'users', uid, 'transaksi'), (snapshot) => {
@@ -935,7 +914,6 @@
             },
             cleanupDatabaseListeners() { if(this.unsubTransaksi) this.unsubTransaksi(); if(this.unsubInvestasi) this.unsubInvestasi(); if(this.unsubRencana) this.unsubRencana(); if(this.unsubProfile) this.unsubProfile(); },
 
-            // --- OCR SCANNER LOGIC (Kecerdasan Buatan) ---
             async prosesScanGambar(event) {
                 const file = event.target.files[0];
                 if (!file) return;
@@ -943,25 +921,20 @@
                 this.isScanning = true;
                 this.scanSuccess = false;
                 this.scanStatus = 'AI sedang membaca gambar (mungkin butuh beberapa detik)...';
-                this.formTransaksi.jumlah = ''; // reset nominal saat ini
+                this.formTransaksi.jumlah = ''; 
 
                 try {
-                    // Perintahkan Tesseract untuk membaca teks di dalam gambar
                     const result = await Tesseract.recognize(file, 'ind+eng');
                     const text = result.data.text;
                     
-                    // Regex pintar: Mencari format uang (ex: 15.000, 150,000, 1.500.000)
                     const regex = /(?:Rp|IDR)?\s*(\d{1,3}(?:[.,]\d{3})+)/gi;
                     let match;
                     let maxAmount = 0;
                     
-                    // Cari semua kemungkinan nominal di struk
                     while ((match = regex.exec(text)) !== null) {
-                        // Bersihkan titik dan koma agar menjadi angka murni
                         let numStr = match[1].replace(/[.,]/g, '');
                         let amount = parseInt(numStr, 10);
                         
-                        // Logika: Total harga biasanya adalah angka paling besar di struk
                         if (amount > maxAmount) {
                             maxAmount = amount;
                         }
@@ -981,12 +954,10 @@
                     console.error("OCR Error:", error);
                 } finally {
                     this.isScanning = false;
-                    // Reset input file agar bisa scan foto yang sama lagi jika diperlukan
                     event.target.value = '';
                 }
             },
 
-            // --- CRUD ---
             async tambahTransaksi() {
                 if(!this.formTransaksi.kategori || !this.formTransaksi.jumlah || !this.user) return;
                 await addDoc(collection(db, 'artifacts', appId, 'users', this.user.uid, 'transaksi'), {
@@ -995,7 +966,7 @@
                 });
                 this.filterBulan = this.formTransaksi.tanggal.substring(0, 7);
                 this.formTransaksi.jumlah = ''; this.formTransaksi.keterangan = '';
-                this.scanStatus = ''; // Hapus pesan sukses scan setelah data disimpan
+                this.scanStatus = ''; 
             },
             async simpanInvestasi() {
                 if(!this.formInvestasi.nama || !this.user) return;
@@ -1048,7 +1019,6 @@
                 if(this.hapusTarget.tipe === 'logout') await signOut(auth);
                 else {
                     await deleteDoc(doc(db, 'artifacts', appId, 'users', this.user.uid, this.hapusTarget.tipe, this.hapusTarget.id));
-                    // Hapus dari list kalkulator jika dihapus
                     if (this.hapusTarget.tipe === 'transaksi') {
                         this.selectedTx = this.selectedTx.filter(txId => txId !== this.hapusTarget.id);
                     }
@@ -1056,10 +1026,8 @@
                 this.showConfirmModal = false; this.hapusTarget = null;
             },
 
-            // --- Computed ---
             get currentMonthName() { if(!this.filterBulan) return ""; const [y, m] = this.filterBulan.split('-'); return new Date(y, m - 1).toLocaleString('id-ID', { month: 'long', year: 'numeric' }); },
             
-            // Filter Transaksi dengan Search
             get transaksiTampil() { 
                 let data = this.transaksi;
                 if (this.filterBulan) {
@@ -1075,7 +1043,6 @@
                 return data;
             },
             
-            // Logika Kalkulator Pintar (Multi-Select)
             get calcSelected() {
                 let masuk = 0; let keluar = 0;
                 this.transaksi.forEach(t => {
@@ -1088,7 +1055,7 @@
             },
 
             toggleSelectAll(dataSource) {
-                const targetArray = this[dataSource]; // 'transaksiTampil' atau 'detailHistoriTransaksi'
+                const targetArray = this[dataSource]; 
                 const allSelected = targetArray.length > 0 && this.selectedTx.length === targetArray.length;
                 
                 if (allSelected) {
@@ -1108,7 +1075,6 @@
             get persentaseKeinginan() { const target = this.totalPemasukanBulanIni * 0.3; return target === 0 ? 0 : Math.min((this.pengeluaranKeinginan / target) * 100, 100); },
             get persentaseTabungan() { const target = this.totalPemasukanBulanIni * 0.2; return target === 0 ? 0 : Math.min((this.pengeluaranTabungan / target) * 100, 100); },
 
-            // Histori Bulanan Grouping
             get historiBulanan() {
                 const grup = {};
                 this.transaksi.forEach(t => {
@@ -1121,7 +1087,6 @@
             },
             getMaxNominalHistori() { let max = 0; this.historiBulanan.forEach(h => { if(h.pemasukan > max) max = h.pemasukan; if(h.pengeluaran > max) max = h.pengeluaran; }); return max === 0 ? 1 : max; },
             
-            // Data untuk halaman Detail Histori
             get detailHistoriTransaksi() {
                 if (!this.selectedBulanDetail) return [];
                 let data = this.transaksi.filter(t => t.tanggal.startsWith(this.selectedBulanDetail));
@@ -1135,16 +1100,15 @@
                 return data;
             },
 
-            // --- Utils ---
             bukaDetailHistori(bulan) {
                 this.selectedBulanDetail = bulan;
                 this.searchDetailBulan = '';
-                this.selectedTx = []; // Reset kalkulator
+                this.selectedTx = []; 
                 window.scrollTo({top:0, behavior:'smooth'});
             },
             tutupDetailHistori() {
                 this.selectedBulanDetail = null;
-                this.selectedTx = []; // Reset kalkulator
+                this.selectedTx = []; 
             },
             editInvestasi(aset) { this.formInvestasi = { id: aset.id, nama: aset.nama, modal: aset.modal, nilaiSekarang: aset.nilaiSekarang }; window.scrollTo({top:0, behavior:'smooth'}); },
             resetFormInvestasi() { this.formInvestasi = { id: null, nama: '', modal: '', nilaiSekarang: '' }; },
@@ -1158,7 +1122,12 @@
             getCategoryIcon(cat) {
                 const map = { 'Gaji': 'fa-money-check-alt', 'Makanan': 'fa-utensils', 'Transportasi': 'fa-car-side', 'Tagihan': 'fa-receipt', 'Tempat Tinggal': 'fa-house-user', 'Hiburan': 'fa-ticket-alt', 'Belanja': 'fa-shopping-bag', 'Usaha': 'fa-store', 'Tabungan/Investasi': 'fa-piggy-bank' };
                 return map[cat] || 'fa-tag';
-            }
+            },
+            get totalModalInvestasi() { return this.investasiList.reduce((sum, item) => sum + parseFloat(item.modal), 0); },
+            get totalNilaiInvestasi() { return this.investasiList.reduce((sum, item) => sum + parseFloat(item.nilaiSekarang), 0); },
+            get totalKeuntunganInvestasi() { return this.totalNilaiInvestasi - this.totalModalInvestasi; },
+            getPersentaseReturn() { return this.totalModalInvestasi === 0 ? "0%" : (((this.totalNilaiInvestasi - this.totalModalInvestasi) / this.totalModalInvestasi) * 100).toFixed(1) + "%"; },
+            get totalRencanaBelumDibeli() { return this.rencanaBelanja.filter(item => !item.status).reduce((sum, item) => sum + parseFloat(item.harga), 0); }
         }));
         Alpine.start();
     </script>
