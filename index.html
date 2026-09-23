@@ -16,6 +16,9 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <!-- Tesseract.js (Untuk OCR Scanner) -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+
     <script>
         tailwind.config = {
             theme: {
@@ -177,7 +180,7 @@
                 </div>
             </header>
 
-            <!-- PADDING BAWAH DITAMBAHKAN DI SINI (pb-32) AGAR TIDAK TERTUTUP KALKULATOR -->
+            <!-- PADDING BAWAH DITAMBAHKAN DI SINI (pb-56) AGAR TIDAK TERTUTUP KALKULATOR -->
             <div class="max-w-5xl mx-auto p-4 sm:p-8 w-full pb-56 md:pb-32">
                 
                 <!-- TAB: DASHBOARD -->
@@ -350,10 +353,22 @@
                                     </div>
 
                                     <div>
-                                        <label class="block text-xs font-medium text-slate-600 mb-1">Nominal</label>
+                                        <div class="flex justify-between items-end mb-1">
+                                            <label class="block text-xs font-medium text-slate-600">Nominal</label>
+                                            <!-- Tombol Trigger Kamera/Galeri -->
+                                            <button type="button" @click="$refs.fileInput.click()" class="text-[10px] font-semibold text-brand-600 hover:text-brand-700 bg-brand-50 hover:bg-brand-100 px-2.5 py-1 rounded transition-colors flex items-center gap-1.5">
+                                                <i class="fas fa-camera"></i> Scan Struk (AI)
+                                            </button>
+                                            <input type="file" x-ref="fileInput" @change="prosesScanGambar" accept="image/*" capture="environment" class="hidden">
+                                        </div>
                                         <div class="relative">
                                             <span class="absolute left-3 top-2.5 text-slate-400 text-sm">Rp</span>
                                             <input type="number" required min="1" x-model.number="formTransaksi.jumlah" class="w-full pl-9 pr-3 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-1 focus:ring-brand-500 focus:border-brand-500 text-slate-900 text-sm font-semibold" placeholder="0">
+                                        </div>
+                                        <!-- Pesan Status Loading AI -->
+                                        <div x-show="scanStatus" class="mt-1.5 flex items-center gap-1.5 text-[10px] font-medium transition-all" :class="isScanning ? 'text-blue-500' : (scanSuccess ? 'text-emerald-500' : 'text-rose-500')">
+                                            <i class="fas" :class="isScanning ? 'fa-spinner fa-spin' : (scanSuccess ? 'fa-check-circle' : 'fa-exclamation-circle')"></i>
+                                            <span x-text="scanStatus"></span>
                                         </div>
                                     </div>
 
@@ -841,6 +856,11 @@
             formInvestasi: { id: null, nama: '', modal: '', nilaiSekarang: '' },
             formRencana: { nama: '', harga: '', kategori: '' },
             
+            // Scanner OCR State
+            isScanning: false,
+            scanStatus: '',
+            scanSuccess: false,
+            
             // State Multi-Select Calculator
             selectedTx: [], 
 
@@ -915,6 +935,57 @@
             },
             cleanupDatabaseListeners() { if(this.unsubTransaksi) this.unsubTransaksi(); if(this.unsubInvestasi) this.unsubInvestasi(); if(this.unsubRencana) this.unsubRencana(); if(this.unsubProfile) this.unsubProfile(); },
 
+            // --- OCR SCANNER LOGIC (Kecerdasan Buatan) ---
+            async prosesScanGambar(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                this.isScanning = true;
+                this.scanSuccess = false;
+                this.scanStatus = 'AI sedang membaca gambar (mungkin butuh beberapa detik)...';
+                this.formTransaksi.jumlah = ''; // reset nominal saat ini
+
+                try {
+                    // Perintahkan Tesseract untuk membaca teks di dalam gambar
+                    const result = await Tesseract.recognize(file, 'ind+eng');
+                    const text = result.data.text;
+                    
+                    // Regex pintar: Mencari format uang (ex: 15.000, 150,000, 1.500.000)
+                    const regex = /(?:Rp|IDR)?\s*(\d{1,3}(?:[.,]\d{3})+)/gi;
+                    let match;
+                    let maxAmount = 0;
+                    
+                    // Cari semua kemungkinan nominal di struk
+                    while ((match = regex.exec(text)) !== null) {
+                        // Bersihkan titik dan koma agar menjadi angka murni
+                        let numStr = match[1].replace(/[.,]/g, '');
+                        let amount = parseInt(numStr, 10);
+                        
+                        // Logika: Total harga biasanya adalah angka paling besar di struk
+                        if (amount > maxAmount) {
+                            maxAmount = amount;
+                        }
+                    }
+
+                    if (maxAmount > 0) {
+                        this.formTransaksi.jumlah = maxAmount;
+                        this.scanSuccess = true;
+                        this.scanStatus = `Berhasil! Total Rp ${maxAmount.toLocaleString('id-ID')} ditemukan.`;
+                    } else {
+                        this.scanSuccess = false;
+                        this.scanStatus = 'Angka total tidak terbaca jelas. Silakan ketik manual.';
+                    }
+                } catch (error) {
+                    this.scanSuccess = false;
+                    this.scanStatus = 'Gagal memproses gambar.';
+                    console.error("OCR Error:", error);
+                } finally {
+                    this.isScanning = false;
+                    // Reset input file agar bisa scan foto yang sama lagi jika diperlukan
+                    event.target.value = '';
+                }
+            },
+
             // --- CRUD ---
             async tambahTransaksi() {
                 if(!this.formTransaksi.kategori || !this.formTransaksi.jumlah || !this.user) return;
@@ -924,6 +995,7 @@
                 });
                 this.filterBulan = this.formTransaksi.tanggal.substring(0, 7);
                 this.formTransaksi.jumlah = ''; this.formTransaksi.keterangan = '';
+                this.scanStatus = ''; // Hapus pesan sukses scan setelah data disimpan
             },
             async simpanInvestasi() {
                 if(!this.formInvestasi.nama || !this.user) return;
