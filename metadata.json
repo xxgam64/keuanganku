@@ -1,0 +1,8 @@
+{
+  "name": "GamMenkeu - Professional Finance",
+  "description": "Aplikasi manajemen keuangan profesional untuk pencatatan arus kas operasional, analisis anggaran aturan 50/30/20, kalkulator cerdas, OCR struk belanja, histori keuangan, dan manajemen portofolio aset.",
+  "requestFramePermissions": [],
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
