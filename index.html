@@ -61,31 +61,22 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
-    <!-- Tailwind CSS -->
+    <!-- Apply theme immediately to prevent flashing - defaults to pure light mode -->
+    <script>
+        (function() {
+            try {
+                const savedTheme = localStorage.getItem('gammenkeu_theme');
+                if (savedTheme === 'dark') {
+                    document.documentElement.classList.add('dark');
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    document.documentElement.setAttribute('data-theme', 'light');
+                }
+            } catch(e) {}
+        })();
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Font Awesome 6 -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Tesseract.js (Untuk OCR Scanner Struk) -->
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-
-    <!-- React 18, PropTypes & Recharts 2 UMD CDN for Data Visualization -->
-    <script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/prop-types@15.8.1/prop-types.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/recharts@2.12.7/umd/Recharts.min.js"></script>
-
-    <!-- jsPDF & html2canvas (Untuk Ekspor Laporan PDF Bulanan) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
-    <!-- SheetJS (xlsx) untuk Ekspor Laporan Excel Profesional -->
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-
-    <!-- Marked.js untuk Render Markdown Asisten AI -->
-    <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
-
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -117,20 +108,32 @@
                     }
                 }
             }
-        }
+        };
+    </script>
 
-        // Apply theme immediately to prevent flashing
-        (function() {
-            try {
-                const savedTheme = localStorage.getItem('gammenkeu_theme');
-                if (savedTheme === 'dark' || (!savedTheme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                    document.documentElement.classList.add('dark');
-                } else {
-                    document.documentElement.classList.remove('dark');
-                }
-            } catch(e) {}
-        })();
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Tesseract.js (Untuk OCR Scanner Struk) -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 
+    <!-- React 18, PropTypes & Recharts 2 UMD CDN for Data Visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prop-types@15.8.1/prop-types.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/recharts@2.12.7/umd/Recharts.min.js"></script>
+
+    <!-- jsPDF & html2canvas (Untuk Ekspor Laporan PDF Bulanan) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <!-- SheetJS (xlsx) untuk Ekspor Laporan Excel Profesional -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+    <!-- Marked.js untuk Render Markdown Asisten AI -->
+    <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+
+    <script>
         function formatRupiah(number) {
             return new Intl.NumberFormat('id-ID', {
                 style: 'currency',
@@ -172,10 +175,32 @@
             color: #0f172a;
             font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
         }
+        
+        /* Baseline light and dark mode rules without harmful overrides */
+        html:not(.dark) {
+            color-scheme: light;
+        }
+        html:not(.dark) body {
+            background-color: #f8fafc;
+            color: #0f172a;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        /* Dark mode overrides */
+        html.dark {
+            color-scheme: dark;
+        }
         html.dark body {
             background-color: #020617;
             color: #f8fafc;
         }
+        html.dark aside,
+        html.dark header {
+            background-color: #0f172a;
+            border-color: #1e293b;
+        }
+
         .tabular-nums {
             font-variant-numeric: tabular-nums;
         }
@@ -188,6 +213,35 @@
         html.dark ::-webkit-scrollbar-thumb:hover { background: #475569; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Buku Kas Smooth Transitions & Animations */
+        @keyframes rowFadeIn {
+            0% {
+                opacity: 0;
+                transform: translateY(-8px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .animate-row-enter {
+            animation: rowFadeIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes highlightPulse {
+            0% {
+                background-color: rgba(16, 185, 129, 0.25);
+                box-shadow: inset 0 0 0 1px rgba(16, 185, 129, 0.5);
+            }
+            100% {
+                background-color: transparent;
+                box-shadow: none;
+            }
+        }
+        .animate-row-highlight {
+            animation: highlightPulse 2.4s ease-out forwards;
+        }
     </style>
 </head>
 <body class="font-sans antialiased h-screen overflow-hidden flex bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100" x-data="keuanganApp()">
@@ -362,34 +416,26 @@
         <main class="flex-1 flex flex-col h-full overflow-hidden bg-slate-50 dark:bg-slate-950 relative">
             
             <!-- Top Bar Header (Desktop & Mobile) -->
-            <header class="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 sm:px-8 flex justify-between items-center shrink-0 z-30">
-                <div class="flex items-center gap-3">
+            <header class="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-3.5 sm:px-8 flex justify-between items-center shrink-0 z-30">
+                <div class="flex items-center gap-2.5 min-w-0">
                     <!-- Mobile Brand Icon -->
-                    <div class="md:hidden w-8 h-8 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 flex items-center justify-center bg-slate-900 text-white shrink-0">
+                    <div class="md:hidden w-8 h-8 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 flex items-center justify-center bg-slate-900 text-white shrink-0 shadow-subtle">
                         <img src="./logo.jpg" alt="Logo" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');">
                         <i class="fas fa-wallet text-xs hidden"></i>
                     </div>
 
                     <!-- Breadcrumb Navigation -->
-                    <div class="flex items-center gap-2 text-xs">
+                    <div class="flex items-center gap-1.5 sm:gap-2 text-xs min-w-0">
                         <span class="font-bold text-slate-900 dark:text-white text-sm hidden sm:inline">GamMenkeu</span>
                         <span class="text-slate-300 dark:text-slate-600 hidden sm:inline" aria-hidden="true">/</span>
-                        <span class="font-semibold text-slate-700 dark:text-slate-200 capitalize" x-text="navItems.find(i => i.id === activeTab)?.label || 'Ringkasan'"></span>
-                        <span class="text-slate-300 dark:text-slate-600" aria-hidden="true">·</span>
-                        <span class="text-slate-500 dark:text-slate-400 font-mono text-[11px]" x-text="filterBulan"></span>
+                        <span class="font-bold sm:font-semibold text-slate-900 dark:text-white text-xs sm:text-slate-700 sm:dark:text-slate-200 truncate capitalize" x-text="navItems.find(i => i.id === activeTab)?.label || 'Ringkasan'"></span>
+                        <span class="text-slate-300 dark:text-slate-600 shrink-0" aria-hidden="true">·</span>
+                        <span class="px-1.5 py-0.5 rounded text-[10px] sm:text-[11px] font-mono font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 shrink-0 border border-slate-200/60 dark:border-slate-700" x-text="filterBulan"></span>
                     </div>
                 </div>
 
-                <!-- Top Bar Action Area (Top Bar Contract Zone 3) -->
-                <div class="flex items-center gap-2 sm:gap-3">
-                    <!-- Mobile Theme Toggle Button -->
-                    <button @click="toggleTheme()"
-                            type="button"
-                            class="md:hidden p-2 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg transition-colors"
-                            :title="theme === 'dark' ? 'Mode Terang' : 'Mode Gelap'">
-                        <i class="fas" :class="theme === 'dark' ? 'fa-moon text-indigo-400' : 'fa-sun text-amber-500'"></i>
-                    </button>
-
+                <!-- Desktop Action Buttons (md and up) -->
+                <div class="hidden md:flex items-center gap-2.5">
                     <!-- OCR Status indicator if scanning -->
                     <div x-show="isScanning" class="flex items-center gap-2 px-3 py-1 bg-sky-50 dark:bg-sky-950/60 border border-sky-200 dark:border-sky-800 text-sky-700 dark:text-sky-300 rounded-lg text-xs">
                         <i class="fas fa-circle-notch fa-spin text-xs"></i>
@@ -397,23 +443,23 @@
                     </div>
 
                     <!-- Export Excel (.xlsx) Button using SheetJS -->
-                    <button @click="eksporExcel()" class="px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900 border border-emerald-200 dark:border-emerald-800 rounded-lg transition-colors flex items-center gap-1.5 shadow-subtle" title="Ekspor Data ke File Excel (.xlsx)">
+                    <button @click="eksporExcel()" class="px-3 py-1.5 text-xs font-semibold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900 border border-emerald-200 dark:border-emerald-800 rounded-lg transition-colors flex items-center gap-1.5 shadow-subtle" title="Ekspor Data ke File Excel (.xlsx)">
                         <i class="fas fa-file-excel text-emerald-600"></i>
-                        <span class="hidden sm:inline">Ekspor Excel</span>
+                        <span>Ekspor Excel</span>
                     </button>
 
                     <!-- Export CSV Button -->
-                    <button @click="eksporCSV()" class="px-2.5 sm:px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-lg transition-colors flex items-center gap-1.5 shadow-subtle" title="Ekspor Data ke CSV">
+                    <button @click="eksporCSV()" class="px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-lg transition-colors flex items-center gap-1.5 shadow-subtle" title="Ekspor Data ke CSV">
                         <i class="fas fa-file-csv text-slate-500"></i>
-                        <span class="hidden md:inline">CSV</span>
+                        <span>CSV</span>
                     </button>
 
                     <!-- Export PDF Report Button -->
-                    <button @click="unduhLaporanPDF()" :disabled="isGeneratingPdf"
-                            class="px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-lg transition-colors flex items-center gap-1.5 shadow-subtle disabled:opacity-60"
+                    <button @click="bukaModalKustomPdf()" :disabled="isGeneratingPdf"
+                            class="px-3 py-1.5 text-xs font-semibold text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-lg transition-colors flex items-center gap-1.5 shadow-subtle disabled:opacity-60"
                             title="Unduh Laporan Keuangan Bulanan PDF">
                         <i class="fas" :class="isGeneratingPdf ? 'fa-spinner fa-spin text-slate-600' : 'fa-file-pdf text-rose-600'"></i>
-                        <span class="hidden sm:inline" x-text="isGeneratingPdf ? 'Menyusun PDF...' : 'Unduh PDF'"></span>
+                        <span x-text="isGeneratingPdf ? 'Menyusun PDF...' : 'Unduh PDF'"></span>
                     </button>
 
                     <!-- Add Transaction Trigger -->
@@ -421,11 +467,87 @@
                         <i class="fas fa-plus text-[10px]"></i>
                         <span>Entri Baru</span>
                     </button>
+                </div>
 
-                    <!-- Mobile Logout Trigger -->
-                    <button @click="konfirmasiLogout()" class="md:hidden w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-600 bg-slate-50">
-                        <i class="fas fa-arrow-right-from-bracket text-xs"></i>
+                <!-- Mobile Action Area (Clean, Uncluttered: + Entri Button & Overflow Menu) -->
+                <div class="flex md:hidden items-center gap-2">
+                    <!-- Scanning Spinner if active -->
+                    <div x-show="isScanning" class="p-1.5 bg-sky-50 dark:bg-sky-950/60 border border-sky-200 dark:border-sky-800 text-sky-700 dark:text-sky-300 rounded-lg text-xs" title="Membaca struk...">
+                        <i class="fas fa-circle-notch fa-spin text-xs"></i>
+                    </div>
+
+                    <!-- Compact + Entri Button -->
+                    <button @click="navigate('transaksi')"
+                            class="px-2.5 py-1.5 text-xs font-semibold text-white bg-slate-900 dark:bg-indigo-600 hover:bg-slate-800 dark:hover:bg-indigo-700 rounded-lg transition-colors flex items-center gap-1 shadow-subtle shrink-0">
+                        <i class="fas fa-plus text-[10px]"></i>
+                        <span>Entri</span>
                     </button>
+
+                    <!-- Mobile Overflow Menu Trigger & Dropdown Popover -->
+                    <div class="relative" @click.away="showMobileHeaderMenu = false">
+                        <button @click="showMobileHeaderMenu = !showMobileHeaderMenu"
+                                type="button"
+                                class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-750 transition-colors shadow-subtle shrink-0"
+                                :class="showMobileHeaderMenu ? 'bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white' : ''"
+                                title="Menu Aksi & Ekspor">
+                            <i class="fas fa-ellipsis-vertical text-sm"></i>
+                        </button>
+
+                        <!-- Dropdown Menu Popover -->
+                        <div x-show="showMobileHeaderMenu"
+                             x-cloak
+                             x-transition:enter="transition ease-out duration-150"
+                             x-transition:enter-start="opacity-0 scale-95 -translate-y-2"
+                             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                             x-transition:leave="transition ease-in duration-100"
+                             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                             x-transition:leave-end="opacity-0 scale-95 -translate-y-2"
+                             class="absolute right-0 top-10 w-56 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-modal p-2 z-50 divide-y divide-slate-100 dark:divide-slate-800">
+                            
+                            <!-- Ganti Tema -->
+                            <div class="pb-1.5">
+                                <button @click="toggleTheme(); showMobileHeaderMenu = false;"
+                                        type="button"
+                                        class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                                    <span class="flex items-center gap-2.5">
+                                        <i class="fas w-4 text-center text-sm" :class="theme === 'dark' ? 'fa-moon text-indigo-400' : 'fa-sun text-amber-500'"></i>
+                                        <span x-text="theme === 'dark' ? 'Mode Gelap' : 'Mode Terang'"></span>
+                                    </span>
+                                    <span class="text-[10px] text-slate-400">Ganti</span>
+                                </button>
+                            </div>
+
+                            <!-- Menu Ekspor -->
+                            <div class="py-1.5 space-y-0.5">
+                                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 py-1">Unduh & Ekspor Data</div>
+                                <button @click="eksporExcel(); showMobileHeaderMenu = false;"
+                                        class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                                    <i class="fas fa-file-excel text-emerald-600 w-4 text-center"></i>
+                                    <span>Ekspor ke Excel (.xlsx)</span>
+                                </button>
+                                <button @click="eksporCSV(); showMobileHeaderMenu = false;"
+                                        class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                                    <i class="fas fa-file-csv text-slate-500 w-4 text-center"></i>
+                                    <span>Ekspor ke CSV</span>
+                                </button>
+                                <button @click="bukaModalKustomPdf(); showMobileHeaderMenu = false;"
+                                        :disabled="isGeneratingPdf"
+                                        class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-50">
+                                    <i class="fas w-4 text-center" :class="isGeneratingPdf ? 'fa-spinner fa-spin text-slate-500' : 'fa-file-pdf text-rose-600'"></i>
+                                    <span x-text="isGeneratingPdf ? 'Menyusun PDF...' : 'Cetak Laporan PDF'"></span>
+                                </button>
+                            </div>
+
+                            <!-- Menu Akun / Keluar -->
+                            <div class="pt-1.5">
+                                <button @click="konfirmasiLogout(); showMobileHeaderMenu = false;"
+                                        class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors">
+                                    <i class="fas fa-arrow-right-from-bracket w-4 text-center"></i>
+                                    <span>Keluar Akun</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </header>
 
@@ -445,96 +567,13 @@
                             <div class="text-xs text-slate-500 dark:text-slate-400 font-medium">
                                 Periode: <span class="font-semibold text-slate-800 dark:text-slate-200" x-text="currentMonthName"></span>
                             </div>
-                            <button @click="unduhLaporanPDF()" :disabled="isGeneratingPdf"
+                            <button @click="bukaModalKustomPdf()" :disabled="isGeneratingPdf"
                                     class="px-2.5 py-1 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-lg transition-colors flex items-center gap-1.5 shadow-subtle disabled:opacity-60">
                                 <i class="fas" :class="isGeneratingPdf ? 'fa-spinner fa-spin text-slate-600' : 'fa-file-pdf text-rose-600'"></i>
                                 <span x-text="isGeneratingPdf ? 'Proses PDF...' : 'Cetak PDF'"></span>
                             </button>
                         </div>
                     </div>
-
-                    <!-- Alert Banner Pengingat Jatuh Tempo Tagihan/Rencana -->
-                    <div x-show="rencanaMendekatiJatuhTempo.length > 0" class="p-3.5 bg-amber-50/90 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/80 rounded-xl flex items-start sm:items-center justify-between gap-3 shadow-subtle">
-                        <div class="flex items-center gap-3 min-w-0">
-                            <div class="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/60 border border-amber-300 dark:border-amber-700 flex items-center justify-center text-amber-800 dark:text-amber-300 shrink-0">
-                                <i class="fas fa-bell text-sm animate-pulse"></i>
-                            </div>
-                            <div class="min-w-0">
-                                <h4 class="text-xs font-bold text-amber-900 dark:text-amber-200 flex items-center gap-1.5 flex-wrap">
-                                    <span>Pengingat Jatuh Tempo:</span>
-                                    <span class="font-normal text-amber-800 dark:text-amber-300" x-text="rencanaMendekatiJatuhTempo.length + ' komitmen pembayaran mendekati waktu tempo.'"></span>
-                                </h4>
-                                <p class="text-[11px] text-amber-800/80 dark:text-amber-300/80 mt-0.5 truncate max-w-xl" x-text="rencanaMendekatiJatuhTempo.map(r => r.nama + ' (' + getReminderInfo(r).badgeText + ')').join(' · ')"></p>
-                            </div>
-                        </div>
-                        <button @click="navigate('rencana')" class="px-2.5 py-1 bg-amber-700 hover:bg-amber-800 text-white rounded-lg text-xs font-semibold shrink-0 transition-colors shadow-subtle flex items-center gap-1">
-                            <span>Periksa</span> <i class="fas fa-arrow-right text-[10px]"></i>
-                        </button>
-                    </div>
-
-                    <!-- Real-Time Notification Banner: Peringatan Ambang Batas Anggaran Kategori (80% & 100%) -->
-                    <template x-for="item in activeBudgetWarnings" :key="item.kategori">
-                        <div class="p-3.5 sm:p-4 rounded-xl border flex items-start sm:items-center justify-between gap-3.5 shadow-subtle transition-all duration-200"
-                             :class="item.isOver100 
-                                ? 'bg-rose-50/95 dark:bg-rose-950/50 border-rose-300 dark:border-rose-800 text-rose-950 dark:text-rose-100' 
-                                : 'bg-amber-50/95 dark:bg-amber-950/50 border-amber-300 dark:border-amber-800 text-amber-950 dark:text-amber-100'">
-                            <div class="flex items-start sm:items-center gap-3 min-w-0 flex-1">
-                                <!-- Warning Icon with pulse on 100% -->
-                                <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border"
-                                     :class="item.isOver100 
-                                        ? 'bg-rose-100 dark:bg-rose-900/60 border-rose-300 dark:border-rose-700 text-rose-700 dark:text-rose-300' 
-                                        : 'bg-amber-100 dark:bg-amber-900/60 border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300'">
-                                    <i class="fas text-sm" :class="item.isOver100 ? 'fa-triangle-exclamation animate-bounce' : 'fa-bell animate-pulse'"></i>
-                                </div>
-                                <div class="min-w-0 flex-1">
-                                    <div class="flex items-center gap-2 flex-wrap">
-                                        <span class="px-2 py-0.5 rounded-full text-[10.5px] font-bold uppercase tracking-wider"
-                                              :class="item.isOver100 
-                                                ? 'bg-rose-600 text-white' 
-                                                : 'bg-amber-500 text-white'"
-                                              x-text="item.isOver100 ? 'MELEBIHI BUDGET (100%+)' : 'PERINGATAN BUDGET (80%+)'">
-                                        </span>
-                                        <span class="text-xs font-bold flex items-center gap-1.5"
-                                              :class="item.isOver100 ? 'text-rose-900 dark:text-rose-200' : 'text-amber-900 dark:text-amber-200'">
-                                            Kategori: <span class="underline decoration-current underline-offset-2" x-text="item.kategori"></span>
-                                        </span>
-                                    </div>
-                                    <p class="text-xs mt-1 leading-snug"
-                                       :class="item.isOver100 ? 'text-rose-800 dark:text-rose-300' : 'text-amber-800 dark:text-amber-300'">
-                                        <template x-if="item.isOver100">
-                                            <span>
-                                                Pengeluaran telah mencapai <strong class="font-mono tabular-nums" x-text="formatRupiah(item.terpakai)"></strong> 
-                                                (<span class="font-bold font-mono" x-text="item.rasio + '%'"></span> dari batas <span class="font-mono" x-text="formatRupiah(item.batas)"></span>). 
-                                                Melebihi alokasi sebesar <strong class="font-mono tabular-nums" x-text="formatRupiah(item.selisih)"></strong>.
-                                            </span>
-                                        </template>
-                                        <template x-if="!item.isOver100">
-                                            <span>
-                                                Pengeluaran telah mencapai <strong class="font-mono tabular-nums" x-text="formatRupiah(item.terpakai)"></strong> 
-                                                (<span class="font-bold font-mono" x-text="item.rasio + '%'"></span> dari batas <span class="font-mono" x-text="formatRupiah(item.batas)"></span>). 
-                                                Sisa batas aman tersisa <strong class="font-mono tabular-nums" x-text="formatRupiah(item.batas - item.terpakai)"></strong>.
-                                            </span>
-                                        </template>
-                                    </p>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-1.5 shrink-0 self-start sm:self-center">
-                                <button @click="bukaModalAnggaran(item.kategori)"
-                                        class="px-2.5 py-1 text-xs font-semibold rounded-lg transition-colors border shadow-subtle flex items-center gap-1"
-                                        :class="item.isOver100 
-                                            ? 'bg-rose-700 hover:bg-rose-800 text-white border-rose-800' 
-                                            : 'bg-amber-600 hover:bg-amber-700 text-white border-amber-700'">
-                                    <i class="fas fa-sliders text-[10px]"></i>
-                                    <span>Sesuaikan Batas</span>
-                                </button>
-                                <button @click="dismissBudgetWarning(item.kategori)"
-                                        class="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors rounded-md"
-                                        title="Tutup Peringatan Ini">
-                                    <i class="fas fa-times text-xs"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </template>
 
                     <!-- Flexible Responsive Executive Balance Metrics Grid (Guarantees zero overlap on long digits) -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4">
@@ -585,6 +624,114 @@
                                 <span>Jumlah Transaksi</span>
                                 <span class="font-mono font-semibold text-slate-700 dark:text-slate-300" x-text="transaksiTampil.filter(t => t.jenis === 'pengeluaran').length + ' entri'"></span>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Kartu Pemantauan Kuota Anggaran Kategori dengan Progress Bar Dinamis -->
+                    <div class="bg-white dark:bg-slate-900 rounded-xl p-5 sm:p-6 shadow-card border border-slate-200/80 dark:border-slate-800 space-y-4">
+                        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+                                    <i class="fas fa-bars-progress text-indigo-600 dark:text-indigo-400"></i>
+                                    Pemantauan Kuota Anggaran Kategori
+                                </h3>
+                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Sisa kuota belanja bulanan dengan indikator progres visual yang berubah dinamis.</p>
+                            </div>
+
+                            <div class="flex items-center gap-2">
+                                <button @click="bukaModalAnggaran()"
+                                        type="button"
+                                        class="px-2.5 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors border border-slate-200 dark:border-slate-700 flex items-center gap-1.5 shadow-subtle">
+                                    <i class="fas fa-sliders text-[11px] text-indigo-600 dark:text-indigo-400"></i>
+                                    <span>Atur Plafon Kuota</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Mini Summary Strip: Total Plafon vs Terpakai vs Sisa Kuota -->
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200/70 dark:border-slate-800 text-xs">
+                            <div class="flex items-center justify-between sm:justify-start sm:gap-2">
+                                <span class="text-slate-500 dark:text-slate-400">Total Plafon Kuota:</span>
+                                <span class="font-bold font-mono text-slate-900 dark:text-white tabular-nums" x-text="formatRupiah(ringkasanKuotaAnggaran.totalBatas)"></span>
+                            </div>
+                            <div class="flex items-center justify-between sm:justify-start sm:gap-2 sm:border-x sm:border-slate-200/70 sm:dark:border-slate-700 sm:px-3">
+                                <span class="text-slate-500 dark:text-slate-400">Total Terpakai:</span>
+                                <span class="font-bold font-mono text-slate-900 dark:text-white tabular-nums" x-text="formatRupiah(ringkasanKuotaAnggaran.totalTerpakai) + ' (' + ringkasanKuotaAnggaran.rasio + '%)'"></span>
+                            </div>
+                            <div class="flex items-center justify-between sm:justify-start sm:gap-2">
+                                <span class="text-slate-500 dark:text-slate-400" x-text="ringkasanKuotaAnggaran.isOver ? 'Defisit Total:' : 'Sisa Kuota Bersih:'"></span>
+                                <span class="font-bold font-mono tabular-nums"
+                                      :class="ringkasanKuotaAnggaran.isOver ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'"
+                                      x-text="(ringkasanKuotaAnggaran.isOver ? '-' : '') + formatRupiah(ringkasanKuotaAnggaran.sisa)"></span>
+                            </div>
+                        </div>
+
+                        <!-- Empty State if no categories configured -->
+                        <div x-show="statusKuotaAnggaranKategori.length === 0" class="py-8 text-center text-xs text-slate-400 dark:text-slate-500">
+                            Belum ada ambang batas kategori yang diatur. Tekan tombol "Atur Plafon Kuota" untuk mulai memantau anggaran.
+                        </div>
+
+                        <!-- Progress Bar List Grid -->
+                        <div x-show="statusKuotaAnggaranKategori.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                            <template x-for="item in statusKuotaAnggaranKategori" :key="item.kategori">
+                                <div class="p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-850 hover:border-slate-300 dark:hover:border-slate-700 transition-all flex flex-col justify-between shadow-subtle group">
+                                    <div>
+                                        <!-- Header Row: Category, Icon & Status Badge -->
+                                        <div class="flex items-center justify-between gap-2 mb-2">
+                                            <div class="flex items-center gap-2 min-w-0">
+                                                <div class="w-7 h-7 rounded-lg flex items-center justify-center text-xs shrink-0 border"
+                                                     :class="{
+                                                         'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border-emerald-200/60 dark:border-emerald-800': item.statusColor === 'emerald',
+                                                         'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border-amber-200/60 dark:border-amber-800': item.statusColor === 'amber',
+                                                         'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 border-rose-200/60 dark:border-rose-800': item.statusColor === 'rose'
+                                                     }">
+                                                    <i class="fas" :class="item.icon"></i>
+                                                </div>
+                                                <div class="min-w-0">
+                                                    <span class="text-xs font-bold text-slate-900 dark:text-white truncate block" x-text="item.kategori"></span>
+                                                </div>
+                                            </div>
+
+                                            <div class="flex items-center gap-1.5 shrink-0">
+                                                <span class="px-2 py-0.5 rounded-full text-[10.5px] font-bold border transition-colors"
+                                                      :class="item.badgeClass"
+                                                      x-text="item.statusBadge"></span>
+                                                <button @click="bukaModalAnggaran(item.kategori)"
+                                                        type="button"
+                                                        class="w-6 h-6 rounded flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                                                        title="Sesuaikan Batas Anggaran">
+                                                    <i class="fas fa-pen text-[10px]"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <!-- Progress Bar Container with Dynamic Color -->
+                                        <div class="relative w-full h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden mb-2 border border-slate-200/50 dark:border-slate-700">
+                                            <div class="h-full rounded-full transition-all duration-500 ease-out"
+                                                 :class="item.barColor"
+                                                 :style="`width: ${item.progressWidth}%`"></div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Bottom Info: Realisasi vs Plafon & Sisa Kuota -->
+                                    <div class="flex items-center justify-between text-[11px] pt-1.5 border-t border-slate-100 dark:border-slate-800/80">
+                                        <div class="text-slate-600 dark:text-slate-400 font-mono">
+                                            <span class="font-bold text-slate-900 dark:text-white" x-text="formatRupiah(item.terpakai)"></span>
+                                            <span> / </span>
+                                            <span x-text="formatRupiah(item.batas)"></span>
+                                        </div>
+                                        <div class="font-mono text-right font-semibold"
+                                             :class="item.isOver ? 'text-rose-600 dark:text-rose-400 font-bold' : 'text-slate-600 dark:text-slate-400'">
+                                            <template x-if="item.isOver">
+                                                <span x-text="'Lebih +' + formatRupiah(item.sisa)"></span>
+                                            </template>
+                                            <template x-if="!item.isOver">
+                                                <span x-text="'Sisa ' + formatRupiah(item.sisa)"></span>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
                         </div>
                     </div>
 
@@ -969,15 +1116,20 @@
                                     </div>
                                 </div>
 
-                                <!-- Transaction Table / Row List -->
-                                <div class="divide-y divide-slate-100 dark:divide-slate-800">
+                                <!-- Transaction Table / Row List with Smooth Filter & Entry Transitions -->
+                                <div class="divide-y divide-slate-100 dark:divide-slate-800 transition-all duration-200 ease-out"
+                                     :class="isFilterAnimating ? 'opacity-40 translate-y-1' : 'opacity-100 translate-y-0'">
                                     <div x-show="transaksiTampilFiltered.length === 0" class="py-12 text-center text-xs text-slate-400 dark:text-slate-500">
                                         Tidak ada catatan transaksi untuk filter ini.
                                     </div>
 
-                                    <template x-for="t in transaksiTampilFiltered" :key="t.id">
-                                        <div class="px-5 py-3 hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors flex items-center justify-between group"
-                                             :class="selectedTx.includes(t.id) ? 'bg-slate-100/60 dark:bg-slate-800/80' : ''">
+                                    <template x-for="(t, index) in transaksiTampilFiltered" :key="t.id">
+                                        <div class="px-5 py-3 hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-all duration-200 flex items-center justify-between group animate-row-enter"
+                                             :style="`animation-delay: ${Math.min(index * 25, 200)}ms`"
+                                             :class="[
+                                                 selectedTx.includes(t.id) ? 'bg-slate-100/60 dark:bg-slate-800/80' : '',
+                                                 newlyAddedTxId === t.id ? 'animate-row-highlight ring-1 ring-emerald-500/50 dark:ring-emerald-400/50' : ''
+                                             ]">
                                             
                                             <!-- Checkbox & Category & Date -->
                                             <div class="flex items-center gap-3 min-w-0 flex-1">
@@ -1251,6 +1403,151 @@
                                  :class="totalKeuntunganInvestasi >= 0 ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-700 dark:text-rose-400'">
                                 <span>Imbal Hasil:</span>
                                 <span x-text="getPersentaseReturn()"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Diagram Batang Recharts Komparasi Portofolio: Modal Disetor vs Nilai Terkini -->
+                    <div class="bg-white dark:bg-slate-900 rounded-xl shadow-card border border-slate-200/80 dark:border-slate-800 p-5 sm:p-6">
+                        <div class="flex flex-col sm:flex-row justify-between sm:items-center pb-4 mb-4 border-b border-slate-100 dark:border-slate-800 gap-2">
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+                                    <i class="fas fa-chart-column text-indigo-600 dark:text-indigo-400"></i>
+                                    Diagram Komparasi Modal vs Nilai Terkini
+                                </h3>
+                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Visualisasi perbandingan modal investasi awal dengan estimasi valuasi pasar saat ini.</p>
+                            </div>
+                            <div class="flex items-center gap-4 text-xs font-medium">
+                                <span class="flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
+                                    <span class="w-3 h-3 rounded-sm bg-slate-500 dark:bg-slate-500 inline-block"></span> Modal Disetor
+                                </span>
+                                <span class="flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
+                                    <span class="w-3 h-3 rounded-sm bg-emerald-600 dark:bg-emerald-500 inline-block"></span> Nilai Terkini
+                                </span>
+                            </div>
+                        </div>
+
+                        <div x-show="investasiList.length === 0" class="py-12 text-center text-xs text-slate-400 dark:text-slate-500">
+                            Belum ada instrumen portofolio untuk divisualisasikan. Daftarkan instrumen investasi Anda pada form di bawah.
+                        </div>
+
+                        <div x-show="investasiList.length > 0" class="w-full">
+                            <div id="portfolio-recharts-container" class="w-full h-80 min-h-[320px]"></div>
+                        </div>
+                    </div>
+
+                    <!-- Card Rekomendasi Diversifikasi Aset Berdasarkan Profil Risiko -->
+                    <div class="bg-white dark:bg-slate-900 rounded-xl shadow-card border border-slate-200/80 dark:border-slate-800 p-5 sm:p-6 space-y-5">
+                        <div class="flex flex-col md:flex-row justify-between md:items-center gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-indigo-600 dark:bg-indigo-400"></span>
+                                    <h3 class="text-sm font-bold text-slate-900 dark:text-white tracking-tight">Rekomendasi Diversifikasi Aset</h3>
+                                </div>
+                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Panduan alokasi portofolio strategis untuk mengoptimalkan imbal hasil sesuai profil risiko Anda.</p>
+                            </div>
+
+                            <!-- Risk Profile Selector Pills -->
+                            <div class="flex items-center p-1 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs font-semibold shrink-0 gap-1 border border-slate-200/60 dark:border-slate-700">
+                                <button type="button" @click="setProfilRisiko('konservatif')"
+                                        class="px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5"
+                                        :class="profilRisiko === 'konservatif' ? 'bg-white dark:bg-slate-700 text-blue-700 dark:text-blue-300 shadow-sm font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'">
+                                    <i class="fas fa-shield-halved text-[11px]" :class="profilRisiko === 'konservatif' ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400'"></i>
+                                    <span>Konservatif</span>
+                                </button>
+                                <button type="button" @click="setProfilRisiko('moderat')"
+                                        class="px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5"
+                                        :class="profilRisiko === 'moderat' ? 'bg-white dark:bg-slate-700 text-emerald-700 dark:text-emerald-300 shadow-sm font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'">
+                                    <i class="fas fa-scale-balanced text-[11px]" :class="profilRisiko === 'moderat' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'"></i>
+                                    <span>Moderat</span>
+                                </button>
+                                <button type="button" @click="setProfilRisiko('agresif')"
+                                        class="px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5"
+                                        :class="profilRisiko === 'agresif' ? 'bg-white dark:bg-slate-700 text-purple-700 dark:text-purple-300 shadow-sm font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'">
+                                    <i class="fas fa-bolt text-[11px]" :class="profilRisiko === 'agresif' ? 'text-purple-600 dark:text-purple-400' : 'text-slate-400'"></i>
+                                    <span>Agresif</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Profile Strategy Summary Badge & Insight -->
+                        <div class="p-4 rounded-xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5"
+                             :class="{
+                                 'bg-blue-50/60 dark:bg-blue-950/30 border-blue-200 dark:border-blue-900/60': profilRisiko === 'konservatif',
+                                 'bg-emerald-50/60 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900/60': profilRisiko === 'moderat',
+                                 'bg-purple-50/60 dark:bg-purple-950/30 border-purple-200 dark:border-purple-900/60': profilRisiko === 'agresif'
+                             }">
+                            <div class="space-y-1">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="px-2 py-0.5 rounded-md text-[10.5px] font-bold uppercase tracking-wider text-white"
+                                          :class="{
+                                              'bg-blue-600': profilRisiko === 'konservatif',
+                                              'bg-emerald-600': profilRisiko === 'moderat',
+                                              'bg-purple-600': profilRisiko === 'agresif'
+                                          }"
+                                          x-text="'Profil ' + profilRisiko"></span>
+                                    <span class="text-xs font-bold text-slate-800 dark:text-slate-200" x-text="saranProfilRisiko.targetHorizon"></span>
+                                    <span class="text-[11px] font-mono text-slate-600 dark:text-slate-400">· Target Return: <strong class="text-slate-900 dark:text-white" x-text="saranProfilRisiko.targetReturn"></strong></span>
+                                </div>
+                                <p class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed" x-text="saranProfilRisiko.deskripsi"></p>
+                            </div>
+                            <div class="text-left sm:text-right shrink-0">
+                                <span class="text-[10.5px] uppercase tracking-wider text-slate-500 font-semibold block">Valuasi Basis Hitung</span>
+                                <span class="text-sm font-bold font-mono text-slate-900 dark:text-white tabular-nums" x-text="formatRupiah(totalNilaiInvestasi > 0 ? totalNilaiInvestasi : totalModalInvestasi)"></span>
+                            </div>
+                        </div>
+
+                        <!-- Visual Multi-Color Allocation Bar -->
+                        <div>
+                            <div class="flex justify-between items-center mb-1.5 text-xs">
+                                <span class="font-semibold text-slate-800 dark:text-slate-200">Komposisi Alokasi Ideal:</span>
+                                <span class="font-mono text-slate-500 text-[11px]">Total 100% Terdistribusi</span>
+                            </div>
+                            <!-- Bar Segments -->
+                            <div class="h-3 w-full rounded-full overflow-hidden flex bg-slate-100 dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700">
+                                <template x-for="item in saranProfilRisiko.alokasi" :key="item.kelas">
+                                    <div :style="`width: ${item.persen}%; background-color: ${item.color}`"
+                                         class="h-full transition-all duration-300 relative group cursor-pointer"
+                                         :title="`${item.kelas}: ${item.persen}%`"></div>
+                                </template>
+                            </div>
+                        </div>
+
+                        <!-- 4-Grid Breakdown Cards with Rupiah Calculation -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                            <template x-for="item in saranProfilRisiko.alokasi" :key="item.kelas">
+                                <div class="p-3.5 rounded-xl border border-slate-200/70 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 flex flex-col justify-between">
+                                    <div>
+                                        <div class="flex items-center justify-between gap-1 mb-1">
+                                            <span class="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
+                                                <span class="w-2.5 h-2.5 rounded-full inline-block shrink-0" :style="`background-color: ${item.color}`"></span>
+                                                <span x-text="item.kelas"></span>
+                                            </span>
+                                            <span class="text-xs font-mono font-bold text-slate-900 dark:text-white px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-subtle" x-text="item.persen + '%'"></span>
+                                        </div>
+                                        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1" x-text="item.contoh"></p>
+                                    </div>
+                                    <div class="mt-3 pt-2.5 border-t border-slate-200/60 dark:border-slate-800 flex justify-between items-baseline">
+                                        <span class="text-[10px] text-slate-400 uppercase tracking-wider">Target Nominal:</span>
+                                        <span class="text-xs font-bold font-mono tabular-nums text-slate-900 dark:text-white"
+                                              x-text="formatRupiah(((totalNilaiInvestasi > 0 ? totalNilaiInvestasi : totalModalInvestasi) * item.persen) / 100)"></span>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+
+                        <!-- Actionable Recommendation Insight Box based on user current assets -->
+                        <div class="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200/80 dark:border-slate-700 text-xs">
+                            <div class="flex items-start gap-2.5">
+                                <div class="w-6 h-6 rounded-lg bg-indigo-100 dark:bg-indigo-900/60 border border-indigo-200 dark:border-indigo-700 flex items-center justify-center text-indigo-700 dark:text-indigo-300 shrink-0 mt-0.5">
+                                    <i class="fas fa-lightbulb text-xs"></i>
+                                </div>
+                                <div class="flex-1 space-y-1">
+                                    <h4 class="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                                        <span>Saran Strategi & Rebalancing Portofolio:</span>
+                                    </h4>
+                                    <p class="text-slate-600 dark:text-slate-300 leading-relaxed text-[11.5px]" x-text="saranProfilRisiko.rekomendasiAksi"></p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1813,11 +2110,12 @@
                         <div style="width: 30px; height: 30px; background-color: #0f172a; border-radius: 7px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 800; font-size: 15px;">G</div>
                         <span style="font-size: 20px; font-weight: 800; letter-spacing: -0.5px; color: #0f172a;">GamMenkeu</span>
                     </div>
-                    <div style="font-size: 13px; font-weight: 800; color: #1e293b; letter-spacing: 0.3px;">LAPORAN KEUANGAN EKSEKUTIF BULANAN</div>
+                    <div style="font-size: 13px; font-weight: 800; color: #1e293b; letter-spacing: 0.3px;">LAPORAN KEUANGAN EKSEKUTIF</div>
                     <div style="font-size: 10px; color: #64748b; margin-top: 1px;">Sistem Manajemen Finansial Pribadi & Operasional Usaha</div>
                 </div>
                 <div style="text-align: right; font-size: 10px; line-height: 1.5; color: #334155;">
-                    <div><strong>Periode Laporan:</strong> <span style="font-weight: 700; color: #0f172a;" x-text="currentMonthName"></span></div>
+                    <div><strong>Periode Laporan:</strong> <span style="font-weight: 700; color: #0f172a;" x-text="labelPeriodePDF"></span></div>
+                    <div><strong>Filter Kategori:</strong> <span style="font-weight: 700; color: #4338ca;" x-text="labelKategoriPDF"></span></div>
                     <div><strong>Tanggal Dokumen:</strong> <span x-text="new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })"></span></div>
                     <div><strong>Akun Pengguna:</strong> <span style="font-family: 'JetBrains Mono', monospace;" x-text="userEmail"></span></div>
                 </div>
@@ -1827,24 +2125,24 @@
             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 14px;">
                 <div style="background-color: #0f172a; color: white; border-radius: 8px; padding: 12px 14px; border: 1px solid #1e293b;">
                     <div style="font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; font-weight: 700;">Saldo Bersih / Surplus</div>
-                    <div style="font-size: 20px; font-weight: 800; font-family: 'JetBrains Mono', monospace; margin-top: 2px;" x-text="formatRupiah(totalPemasukanBulanIni - totalPengeluaranBulanIni)"></div>
+                    <div style="font-size: 20px; font-weight: 800; font-family: 'JetBrains Mono', monospace; margin-top: 2px;" x-text="formatRupiah(dataPeriodePDF.saldo)"></div>
                     <div style="font-size: 10px; color: #cbd5e1; margin-top: 4px; padding-top: 4px; border-top: 1px solid #334155; display: flex; justify-content: space-between;">
                         <span>Rasio Tabungan:</span>
-                        <span style="font-weight: 800; color: #34d399;" x-text="totalPemasukanBulanIni > 0 ? (((totalPemasukanBulanIni - totalPengeluaranBulanIni) / totalPemasukanBulanIni) * 100).toFixed(1) + '%' : '0%'"></span>
+                        <span style="font-weight: 800; color: #34d399;" x-text="dataPeriodePDF.totalPemasukan > 0 ? ((dataPeriodePDF.saldo / dataPeriodePDF.totalPemasukan) * 100).toFixed(1) + '%' : '0%'"></span>
                     </div>
                 </div>
                 <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px;">
                     <div style="font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; font-weight: 700;">Total Pemasukan</div>
-                    <div style="font-size: 20px; font-weight: 800; font-family: 'JetBrains Mono', monospace; color: #047857; margin-top: 2px;" x-text="formatRupiah(totalPemasukanBulanIni)"></div>
+                    <div style="font-size: 20px; font-weight: 800; font-family: 'JetBrains Mono', monospace; color: #047857; margin-top: 2px;" x-text="formatRupiah(dataPeriodePDF.totalPemasukan)"></div>
                     <div style="font-size: 10px; color: #64748b; margin-top: 4px; padding-top: 4px; border-top: 1px solid #e2e8f0;">
-                        <span x-text="transaksiTampil.filter(t => t.jenis === 'pemasukan').length + ' Transaksi Tercatat'"></span>
+                        <span x-text="dataPeriodePDF.transaksi.filter(t => t.jenis === 'pemasukan').length + ' Transaksi Tercatat'"></span>
                     </div>
                 </div>
                 <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px;">
                     <div style="font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; font-weight: 700;">Total Pengeluaran</div>
-                    <div style="font-size: 20px; font-weight: 800; font-family: 'JetBrains Mono', monospace; color: #e11d48; margin-top: 2px;" x-text="formatRupiah(totalPengeluaranBulanIni)"></div>
+                    <div style="font-size: 20px; font-weight: 800; font-family: 'JetBrains Mono', monospace; color: #e11d48; margin-top: 2px;" x-text="formatRupiah(dataPeriodePDF.totalPengeluaran)"></div>
                     <div style="font-size: 10px; color: #64748b; margin-top: 4px; padding-top: 4px; border-top: 1px solid #e2e8f0;">
-                        <span x-text="transaksiTampil.filter(t => t.jenis === 'pengeluaran').length + ' Transaksi Tercatat'"></span>
+                        <span x-text="dataPeriodePDF.transaksi.filter(t => t.jenis === 'pengeluaran').length + ' Transaksi Tercatat'"></span>
                     </div>
                 </div>
             </div>
@@ -1879,7 +2177,7 @@
                 <!-- Tabel Kategori (Top 5) -->
                 <div>
                     <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #0f172a; margin-bottom: 6px; padding-bottom: 3px; border-bottom: 1px solid #e2e8f0;">
-                        Rincian Pos Belanja Terbesar
+                        <span x-text="pdfOptions.kategori && pdfOptions.kategori !== 'semua' ? 'Rincian Kategori: ' + pdfOptions.kategori : 'Rincian Pos Belanja Terbesar'"></span>
                     </div>
                     <table style="width: 100%; font-size: 10px; border-collapse: collapse;">
                         <thead>
@@ -1890,7 +2188,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <template x-for="cat in alokasiPengeluaranKategori.slice(0, 5)" :key="cat.name">
+                            <template x-for="cat in dataPeriodePDF.alokasiKategori.slice(0, 5)" :key="cat.name">
                                 <tr style="border-bottom: 1px solid #f1f5f9;">
                                     <td style="padding: 4px 0; font-weight: 600; color: #334155;" x-text="cat.name"></td>
                                     <td style="padding: 4px 0; text-align: right; font-family: 'JetBrains Mono', monospace;" x-text="formatRupiah(cat.value)"></td>
@@ -1910,31 +2208,31 @@
                         <div style="border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 10px; background-color: #f8fafc;">
                             <div style="display: flex; justify-content: space-between; align-items: center; font-weight: 700; color: #1e293b;">
                                 <span>Kebutuhan Pokok (50%)</span>
-                                <span style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px;" x-text="formatRupiah(pengeluaranKebutuhan) + ' / ' + formatRupiah(totalPemasukanBulanIni * 0.5)"></span>
+                                <span style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px;" x-text="formatRupiah(dataPeriodePDF.pengeluaranKebutuhan) + ' / ' + formatRupiah(dataPeriodePDF.totalPemasukan * 0.5)"></span>
                             </div>
                             <div style="display: flex; justify-content: space-between; align-items: center; font-size: 9.5px; color: #64748b; margin-top: 3px;">
-                                <span>Realisasi: <strong style="color: #0f172a;" x-text="persentaseKebutuhan.toFixed(1) + '%'"></strong></span>
-                                <span>Sisa Kuota: <strong :style="totalPemasukanBulanIni * 0.5 - pengeluaranKebutuhan >= 0 ? 'color: #047857;' : 'color: #e11d48;'" x-text="formatRupiah(totalPemasukanBulanIni * 0.5 - pengeluaranKebutuhan)"></strong></span>
+                                <span>Realisasi: <strong style="color: #0f172a;" x-text="(dataPeriodePDF.totalPemasukan > 0 ? ((dataPeriodePDF.pengeluaranKebutuhan / (dataPeriodePDF.totalPemasukan * 0.5)) * 100) : 0).toFixed(1) + '%'"></strong></span>
+                                <span>Sisa Kuota: <strong :style="dataPeriodePDF.totalPemasukan * 0.5 - dataPeriodePDF.pengeluaranKebutuhan >= 0 ? 'color: #047857;' : 'color: #e11d48;'" x-text="formatRupiah(dataPeriodePDF.totalPemasukan * 0.5 - dataPeriodePDF.pengeluaranKebutuhan)"></strong></span>
                             </div>
                         </div>
                         <div style="border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 10px; background-color: #f8fafc;">
                             <div style="display: flex; justify-content: space-between; align-items: center; font-weight: 700; color: #1e293b;">
                                 <span>Keinginan & Rekreasi (30%)</span>
-                                <span style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px;" x-text="formatRupiah(pengeluaranKeinginan) + ' / ' + formatRupiah(totalPemasukanBulanIni * 0.3)"></span>
+                                <span style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px;" x-text="formatRupiah(dataPeriodePDF.pengeluaranKeinginan) + ' / ' + formatRupiah(dataPeriodePDF.totalPemasukan * 0.3)"></span>
                             </div>
                             <div style="display: flex; justify-content: space-between; align-items: center; font-size: 9.5px; color: #64748b; margin-top: 3px;">
-                                <span>Realisasi: <strong style="color: #0f172a;" x-text="persentaseKeinginan.toFixed(1) + '%'"></strong></span>
-                                <span>Sisa Kuota: <strong :style="totalPemasukanBulanIni * 0.3 - pengeluaranKeinginan >= 0 ? 'color: #047857;' : 'color: #e11d48;'" x-text="formatRupiah(totalPemasukanBulanIni * 0.3 - pengeluaranKeinginan)"></strong></span>
+                                <span>Realisasi: <strong style="color: #0f172a;" x-text="(dataPeriodePDF.totalPemasukan > 0 ? ((dataPeriodePDF.pengeluaranKeinginan / (dataPeriodePDF.totalPemasukan * 0.3)) * 100) : 0).toFixed(1) + '%'"></strong></span>
+                                <span>Sisa Kuota: <strong :style="dataPeriodePDF.totalPemasukan * 0.3 - dataPeriodePDF.pengeluaranKeinginan >= 0 ? 'color: #047857;' : 'color: #e11d48;'" x-text="formatRupiah(dataPeriodePDF.totalPemasukan * 0.3 - dataPeriodePDF.pengeluaranKeinginan)"></strong></span>
                             </div>
                         </div>
                         <div style="border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 10px; background-color: #f8fafc;">
                             <div style="display: flex; justify-content: space-between; align-items: center; font-weight: 700; color: #1e293b;">
                                 <span>Tabungan & Portofolio (20%)</span>
-                                <span style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px;" x-text="formatRupiah(pengeluaranTabungan) + ' / ' + formatRupiah(totalPemasukanBulanIni * 0.2)"></span>
+                                <span style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px;" x-text="formatRupiah(dataPeriodePDF.pengeluaranTabungan) + ' / ' + formatRupiah(dataPeriodePDF.totalPemasukan * 0.2)"></span>
                             </div>
                             <div style="display: flex; justify-content: space-between; align-items: center; font-size: 9.5px; color: #64748b; margin-top: 3px;">
-                                <span>Realisasi: <strong style="color: #0f172a;" x-text="persentaseTabungan.toFixed(1) + '%'"></strong></span>
-                                <span>Target: <strong style="color: #0f172a;" x-text="formatRupiah(totalPemasukanBulanIni * 0.2)"></strong></span>
+                                <span>Realisasi: <strong style="color: #0f172a;" x-text="(dataPeriodePDF.totalPemasukan > 0 ? ((dataPeriodePDF.pengeluaranTabungan / (dataPeriodePDF.totalPemasukan * 0.2)) * 100) : 0).toFixed(1) + '%'"></strong></span>
+                                <span>Target: <strong style="color: #0f172a;" x-text="formatRupiah(dataPeriodePDF.totalPemasukan * 0.2)"></strong></span>
                             </div>
                         </div>
                     </div>
@@ -1944,7 +2242,7 @@
             <!-- 5. Daftar Transaksi Terpilih (Exact 6 Entries to Ensure Single Page Fit) -->
             <div style="margin-bottom: 12px;">
                 <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #0f172a; margin-bottom: 6px; padding-bottom: 3px; border-bottom: 1px solid #e2e8f0;">
-                    Catatan Transaksi Utama Periode Ini
+                    <span x-text="pdfOptions.kategori && pdfOptions.kategori !== 'semua' ? 'Catatan Transaksi Kategori ' + pdfOptions.kategori : 'Catatan Transaksi Utama Periode Ini'"></span>
                 </div>
                 <table style="width: 100%; font-size: 9.5px; border-collapse: collapse;">
                     <thead>
@@ -1956,7 +2254,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <template x-for="(t, idx) in transaksiTampil.slice(0, 6)" :key="t.id">
+                        <template x-for="(t, idx) in dataPeriodePDF.transaksi.slice(0, 6)" :key="t.id">
                             <tr style="border-bottom: 1px solid #f1f5f9;" :style="idx % 2 === 1 ? 'background-color: #fafafa;' : ''">
                                 <td style="padding: 4px 6px; font-family: 'JetBrains Mono', monospace;" x-text="t.tanggal"></td>
                                 <td style="padding: 4px 6px; font-weight: 600;" x-text="t.kategori"></td>
@@ -1966,6 +2264,11 @@
                                     x-text="(t.jenis === 'pemasukan' ? '+ ' : '- ') + formatRupiah(t.jumlah)"></td>
                             </tr>
                         </template>
+                        <tr x-show="dataPeriodePDF.transaksi.length === 0">
+                            <td colspan="4" style="padding: 12px 6px; text-align: center; color: #94a3b8; font-style: italic;">
+                                Tidak ada catatan transaksi untuk kategori dan rentang tanggal yang dipilih.
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -2182,6 +2485,168 @@
         </div>
     </div>
 
+    <!-- Modal Kustomisasi Laporan PDF (Pilih Rentang Tanggal Spesifik / Per Bulan & Filter Kategori) -->
+    <div x-show="showPdfModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+        <div class="bg-white dark:bg-slate-900 p-5 sm:p-6 rounded-2xl shadow-modal max-w-md w-full border border-slate-200 dark:border-slate-800 max-h-[90vh] overflow-y-auto" @click.away="showPdfModal = false">
+            <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-100 dark:border-slate-800">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 flex items-center justify-center text-rose-600 dark:text-rose-400">
+                        <i class="fas fa-file-pdf text-sm"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white">Kustomisasi Laporan PDF</h3>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400">Pilih periode tanggal spesifik & filter kategori transaksi untuk dicetak.</p>
+                    </div>
+                </div>
+                <button @click="showPdfModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i class="fas fa-times"></i></button>
+            </div>
+
+            <!-- Mode Selector & Filter Options -->
+            <div class="space-y-4">
+                <!-- 1. Tipe Periode Laporan -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Tipe Periode Laporan</label>
+                    <div class="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs font-semibold">
+                        <button type="button" @click="pdfOptions.mode = 'rentang'"
+                                class="py-1.5 px-3 rounded-lg transition-all text-center flex items-center justify-center gap-1.5"
+                                :class="pdfOptions.mode === 'rentang' ? 'bg-white dark:bg-slate-700 text-rose-700 dark:text-rose-400 shadow-subtle' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'">
+                            <i class="far fa-calendar-days text-[11px]"></i>
+                            <span>Rentang Tanggal</span>
+                        </button>
+                        <button type="button" @click="pdfOptions.mode = 'bulan'"
+                                class="py-1.5 px-3 rounded-lg transition-all text-center flex items-center justify-center gap-1.5"
+                                :class="pdfOptions.mode === 'bulan' ? 'bg-white dark:bg-slate-700 text-indigo-700 dark:text-indigo-400 shadow-subtle' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'">
+                            <i class="far fa-calendar text-[11px]"></i>
+                            <span>Per Bulan</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Input Rentang Tanggal (Start Date - End Date) -->
+                <div x-show="pdfOptions.mode === 'rentang'" class="space-y-2.5">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1">Tanggal Mulai</label>
+                            <input type="date" x-model="pdfOptions.startDate"
+                                   class="w-full px-3 py-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-mono text-slate-800 dark:text-slate-100 focus:outline-none focus:border-slate-800 dark:focus:border-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1">Tanggal Selesai</label>
+                            <input type="date" x-model="pdfOptions.endDate"
+                                   class="w-full px-3 py-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-mono text-slate-800 dark:text-slate-100 focus:outline-none focus:border-slate-800 dark:focus:border-indigo-500">
+                        </div>
+                    </div>
+                    <div class="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                        <i class="fas fa-circle-info text-indigo-500 text-[10px]"></i>
+                        <span>Pilih periode kustom fleksibel seperti 1 pekan, tengah bulan, atau rentang spesifik.</span>
+                    </div>
+                </div>
+
+                <!-- Input Per Bulan -->
+                <div x-show="pdfOptions.mode === 'bulan'">
+                    <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1">Pilih Bulan</label>
+                    <input type="month" x-model="pdfOptions.bulan"
+                           class="w-full px-3 py-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-mono text-slate-800 dark:text-slate-100 focus:outline-none focus:border-slate-800 dark:focus:border-indigo-500">
+                </div>
+
+                <!-- 2. Filter Kategori Transaksi Spesifik -->
+                <div class="pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                            Pilih Kategori Transaksi
+                        </label>
+                        <button type="button"
+                                x-show="pdfOptions.kategori && pdfOptions.kategori !== 'semua'"
+                                @click="pdfOptions.kategori = 'semua'"
+                                class="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
+                            Reset ke Semua
+                        </button>
+                    </div>
+
+                    <!-- Dropdown Kategori -->
+                    <select x-model="pdfOptions.kategori"
+                            class="w-full px-3 py-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:border-slate-800 dark:focus:border-indigo-500">
+                        <option value="semua">Semua Kategori (Semua Transaksi)</option>
+                        <optgroup label="Kategori Tersedia">
+                            <template x-for="cat in daftarKategoriTransaksi" :key="cat">
+                                <option :value="cat" x-text="cat"></option>
+                            </template>
+                        </optgroup>
+                    </select>
+
+                    <!-- Quick Pick Chips / Badges untuk Kategori Populer -->
+                    <div class="mt-2">
+                        <span class="block text-[10.5px] text-slate-500 dark:text-slate-400 mb-1.5">Akses Cepat Kategori:</span>
+                        <div class="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto pr-1">
+                            <button type="button" @click="pdfOptions.kategori = 'semua'"
+                                    class="px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all border flex items-center gap-1"
+                                    :class="(!pdfOptions.kategori || pdfOptions.kategori === 'semua')
+                                        ? 'bg-slate-900 text-white border-slate-900 dark:bg-indigo-600 dark:border-indigo-600 font-semibold shadow-xs'
+                                        : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750'">
+                                <i class="fas fa-layer-group text-[10px]"></i>
+                                <span>Semua</span>
+                            </button>
+                            <template x-for="cat in daftarKategoriTransaksi" :key="cat">
+                                <button type="button" @click="pdfOptions.kategori = cat"
+                                        class="px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all border flex items-center gap-1.5"
+                                        :class="pdfOptions.kategori === cat
+                                            ? 'bg-rose-600 text-white border-rose-600 font-semibold shadow-xs'
+                                            : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750'">
+                                    <i class="fas text-[10px]" :class="getCategoryIcon(cat)"></i>
+                                    <span x-text="cat"></span>
+                                </button>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preview Periode & Filter Info Box -->
+                <div class="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200/80 dark:border-slate-700 space-y-1.5 text-xs">
+                    <div class="flex justify-between items-center text-slate-500 dark:text-slate-400 text-[11px]">
+                        <span>Label Dokumen:</span>
+                        <span class="font-bold text-slate-800 dark:text-slate-200" x-text="labelPeriodePDF"></span>
+                    </div>
+                    <div class="flex justify-between items-center text-slate-500 dark:text-slate-400 text-[11px]">
+                        <span>Filter Kategori:</span>
+                        <span class="font-semibold px-2 py-0.5 rounded text-[10.5px]"
+                              :class="pdfOptions.kategori && pdfOptions.kategori !== 'semua'
+                                ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/70 dark:text-rose-300 border border-rose-200 dark:border-rose-800'
+                                : 'bg-slate-200/70 text-slate-700 dark:bg-slate-700 dark:text-slate-200'"
+                              x-text="pdfOptions.kategori && pdfOptions.kategori !== 'semua' ? pdfOptions.kategori : 'Semua Kategori'"></span>
+                    </div>
+                    <div class="flex justify-between items-center text-slate-500 dark:text-slate-400 text-[11px]">
+                        <span>Transaksi Terfilter:</span>
+                        <span class="font-mono font-bold text-slate-900 dark:text-white" x-text="dataPeriodePDF.transaksi.length + ' Entri'"></span>
+                    </div>
+                    <div class="flex justify-between items-center text-slate-500 dark:text-slate-400 text-[11px] pt-1 border-t border-slate-200/60 dark:border-slate-700">
+                        <span>Net Arus Kas Periode:</span>
+                        <span class="font-mono font-bold tabular-nums"
+                              :class="dataPeriodePDF.saldo >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'"
+                              x-text="formatRupiah(dataPeriodePDF.saldo)"></span>
+                    </div>
+                    <div x-show="dataPeriodePDF.transaksi.length === 0" class="pt-1.5 text-[11px] text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1.5">
+                        <i class="fas fa-triangle-exclamation text-xs"></i>
+                        <span>Tidak ada transaksi pada kategori dan rentang periode ini.</span>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" @click="showPdfModal = false"
+                            class="px-3.5 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-medium hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+                        Batal
+                    </button>
+                    <button type="button" @click="showPdfModal = false; unduhLaporanPDF();"
+                            :disabled="isGeneratingPdf || dataPeriodePDF.transaksi.length === 0"
+                            class="px-4 py-2 bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white rounded-xl text-xs font-semibold shadow-subtle transition-colors flex items-center gap-1.5">
+                        <i class="fas" :class="isGeneratingPdf ? 'fa-spinner fa-spin' : 'fa-file-pdf'"></i>
+                        <span x-text="isGeneratingPdf ? 'Menyusun PDF...' : 'Unduh Laporan PDF'"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal Pengaturan Ambang Batas Anggaran Kategori -->
     <div x-show="showBudgetModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
         <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-modal max-w-md w-full border border-slate-200 dark:border-slate-800" @click.away="showBudgetModal = false">
@@ -2373,7 +2838,16 @@
 
         // Dedicated PDF SVG Pie Chart Renderer (Guarantees zero text overlap in donut)
         function renderPdfPieChart(container, data) {
-            if (!container || !data || data.length === 0) return;
+            if (!container) return;
+            if (!data || data.length === 0) {
+                container.innerHTML = `
+                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #94a3b8; font-size: 10px; text-align: center;">
+                        <span style="font-weight: 700; color: #64748b;">Tidak Ada Pengeluaran</span>
+                        <span style="font-size: 8.5px; margin-top: 2px;">Pada filter kategori/periode ini</span>
+                    </div>
+                `;
+                return;
+            }
 
             const size = 105;
             const r = 36;
@@ -2806,6 +3280,183 @@
             rechartsPieRoot.render(chart);
         }
 
+        // Portfolio Bar Chart Visualizers (Modal vs Nilai Terkini via Recharts + SVG Fallback)
+        let portfolioRechartsRoot = null;
+
+        function renderSvgPortfolioChart(container, data) {
+            if (!container || !data || data.length === 0) return;
+            const maxVal = Math.max(...data.map(d => Math.max(d.modal, d.nilaiSekarang)), 1);
+            const barsHtml = data.map((d) => {
+                const modalH = Math.max(6, Math.round((d.modal / maxVal) * 180));
+                const curH = Math.max(6, Math.round((d.nilaiSekarang / maxVal) * 180));
+                return `
+                    <div class="flex-1 flex flex-col items-center justify-end h-full px-1 min-w-[60px] max-w-[120px]">
+                        <div class="flex items-end gap-1.5 h-[200px] w-full justify-center">
+                            <div class="w-4 sm:w-5 bg-slate-500 rounded-t shadow-sm transition-all" style="height: ${modalH}px" title="Modal: ${formatRupiah(d.modal)}"></div>
+                            <div class="w-4 sm:w-5 bg-emerald-600 rounded-t shadow-sm transition-all" style="height: ${curH}px" title="Nilai Terkini: ${formatRupiah(d.nilaiSekarang)}"></div>
+                        </div>
+                        <span class="text-[10px] font-semibold text-slate-700 dark:text-slate-300 mt-2 truncate max-w-[90px] text-center">${d.name}</span>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = `
+                <div class="w-full h-80 flex flex-col justify-end pt-4 select-none">
+                    <div class="flex items-end justify-around h-[240px] w-full border-b border-slate-200 dark:border-slate-800 pb-1">
+                        ${barsHtml}
+                    </div>
+                    <div class="flex items-center justify-between pt-2 text-[10px] text-slate-500">
+                        <span>Skala proporsional aset</span>
+                        <span>Maks: ${formatRupiah(maxVal)}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderWithRechartsPortfolio(container, data) {
+            if (!container || !window.React || !window.ReactDOM || !window.Recharts) return;
+
+            if (!portfolioRechartsRoot) {
+                container.innerHTML = '';
+                portfolioRechartsRoot = window.ReactDOM.createRoot(container);
+            }
+
+            const { createElement: e } = window.React;
+            const { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } = window.Recharts;
+            const isDark = document.documentElement.classList.contains('dark');
+
+            const CustomPortfolioTooltip = ({ active, payload, label }) => {
+                if (active && payload && payload.length) {
+                    const item = payload[0].payload;
+                    const modal = item.modal;
+                    const nilai = item.nilaiSekarang;
+                    const gain = item.gain;
+                    const roi = item.roi;
+                    return e('div', {
+                        className: 'bg-slate-900 text-white p-3 rounded-xl shadow-modal text-xs border border-slate-700 min-w-[210px]'
+                    }, [
+                        e('div', { key: 'lbl', className: 'font-bold border-b border-slate-800 pb-1.5 mb-1.5 text-slate-100 flex items-center gap-1.5' }, [
+                            e('i', { key: 'ic', className: 'fas fa-briefcase text-indigo-400' }),
+                            e('span', { key: 'txt' }, label)
+                        ]),
+                        e('div', { key: 'mod', className: 'flex items-center justify-between gap-4 py-0.5' }, [
+                            e('span', { key: 'modl', className: 'text-slate-400 font-medium' }, 'Modal Disetor:'),
+                            e('span', { key: 'modv', className: 'font-mono tabular-nums font-bold text-slate-200' }, formatRupiah(modal))
+                        ]),
+                        e('div', { key: 'cur', className: 'flex items-center justify-between gap-4 py-0.5' }, [
+                            e('span', { key: 'curl', className: 'text-emerald-400 font-medium' }, 'Nilai Terkini:'),
+                            e('span', { key: 'curv', className: 'font-mono tabular-nums font-bold text-white' }, formatRupiah(nilai))
+                        ]),
+                        e('div', { key: 'ret', className: 'mt-2 pt-1.5 border-t border-slate-800 flex items-center justify-between gap-4' }, [
+                            e('span', { key: 'retl', className: 'text-slate-400' }, 'Imbal Hasil:'),
+                            e('span', {
+                                key: 'retv',
+                                className: 'font-mono tabular-nums font-bold ' + (gain >= 0 ? 'text-emerald-400' : 'text-rose-400')
+                            }, (gain >= 0 ? '+' : '') + formatRupiah(gain) + ' (' + (roi >= 0 ? '+' : '') + roi.toFixed(1) + '%)')
+                        ])
+                    ]);
+                }
+                return null;
+            };
+
+            const chart = e(ResponsiveContainer, { width: '100%', height: 320, minWidth: 280, debounce: 50 },
+                e(BarChart, {
+                    data: data,
+                    margin: { top: 15, right: 15, left: 5, bottom: 5 },
+                    barGap: 8
+                }, [
+                    e(CartesianGrid, { key: 'grid', strokeDasharray: '3 3', stroke: isDark ? '#1e293b' : '#f1f5f9', vertical: false }),
+                    e(XAxis, {
+                        key: 'x',
+                        dataKey: 'name',
+                        tick: { fill: isDark ? '#94a3b8' : '#334155', fontSize: 11, fontFamily: 'Plus Jakarta Sans', fontWeight: 600 },
+                        tickLine: false,
+                        axisLine: { stroke: isDark ? '#334155' : '#e2e8f0' }
+                    }),
+                    e(YAxis, {
+                        key: 'y',
+                        tickFormatter: (val) => {
+                            if (val >= 1000000) return (val / 1000000).toFixed(1).replace('.0','') + ' Jt';
+                            if (val >= 1000) return (val / 1000).toFixed(0) + ' Rb';
+                            return val;
+                        },
+                        tick: { fill: isDark ? '#94a3b8' : '#64748b', fontSize: 10, fontFamily: 'JetBrains Mono' },
+                        tickLine: false,
+                        axisLine: false,
+                        width: 65
+                    }),
+                    e(Tooltip, { key: 'tip', content: (props) => e(CustomPortfolioTooltip, props), cursor: { fill: isDark ? 'rgba(30, 41, 59, 0.4)' : 'rgba(241, 245, 249, 0.6)' } }),
+                    e(Bar, {
+                        key: 'bmod',
+                        dataKey: 'modal',
+                        name: 'Modal Disetor',
+                        fill: isDark ? '#64748b' : '#64748b',
+                        radius: [4, 4, 0, 0],
+                        maxBarSize: 38
+                    }),
+                    e(Bar, {
+                        key: 'bcur',
+                        dataKey: 'nilaiSekarang',
+                        name: 'Nilai Terkini',
+                        fill: '#059669', // Emerald 600
+                        radius: [4, 4, 0, 0],
+                        maxBarSize: 38
+                    })
+                ])
+            );
+
+            portfolioRechartsRoot.render(chart);
+        }
+
+        function renderPortfolioChart() {
+            const container = document.getElementById('portfolio-recharts-container');
+            if (!container) return;
+
+            const app = window.__keuanganAppInstance;
+            const list = app && app.investasiList ? app.investasiList : [];
+            if (!list || list.length === 0) {
+                container.innerHTML = '<div class="py-12 text-center text-xs text-slate-400 dark:text-slate-500">Belum ada instrumen portofolio untuk divisualisasikan. Daftarkan instrumen investasi Anda pada form di bawah.</div>';
+                return;
+            }
+
+            const data = list.map(item => {
+                const modal = parseFloat(item.modal || 0);
+                const nilai = parseFloat(item.nilaiSekarang || 0);
+                const gain = nilai - modal;
+                const roi = modal > 0 ? (gain / modal) * 100 : 0;
+                return {
+                    name: item.nama || 'Aset',
+                    modal: modal,
+                    nilaiSekarang: nilai,
+                    gain: gain,
+                    roi: roi
+                };
+            });
+
+            // 1. Immediately paint SVG chart so user NEVER sees a blank card
+            if (!portfolioRechartsRoot) {
+                renderSvgPortfolioChart(container, data);
+            }
+
+            // 2. If Recharts is ready, upgrade to interactive Recharts React component
+            if (window.React && window.ReactDOM && window.Recharts) {
+                try {
+                    renderWithRechartsPortfolio(container, data);
+                    return;
+                } catch (err) {
+                    console.warn('Portfolio Recharts render fallback active:', err);
+                }
+            } else {
+                if (!window._portfolio_recharts_retries) window._portfolio_recharts_retries = 0;
+                if (window._portfolio_recharts_retries < 15) {
+                    window._portfolio_recharts_retries++;
+                    setTimeout(() => {
+                        if (window.Recharts) renderPortfolioChart();
+                    }, 250);
+                }
+            }
+        }
+
         Alpine.data('keuanganApp', () => ({
             // Core Auth & Mode State
             isDemoMode: false,
@@ -2828,8 +3479,8 @@
                 { id: 'aiChat', label: 'Konsultan AI', icon: 'fas fa-wand-magic-sparkles' }
             ],
 
-            // Global Theme Mode (Light / Dark)
-            theme: localStorage.getItem('gammenkeu_theme') || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'),
+            // Global Theme Mode (Light / Dark) - Default to pure original light mode
+            theme: localStorage.getItem('gammenkeu_theme') === 'dark' ? 'dark' : 'light',
 
             // Modals & User Level
             showConfirmModal: false,
@@ -2843,6 +3494,29 @@
             followErrorMessage: '',
             toastMessage: '',
             toastVisible: false,
+            showMobileHeaderMenu: false,
+
+            // Modal Kustomisasi Laporan PDF
+            showPdfModal: false,
+            pdfOptions: {
+                mode: 'rentang',
+                startDate: '',
+                endDate: '',
+                bulan: '',
+                kategori: 'semua'
+            },
+
+            // Profil Risiko & Rekomendasi Diversifikasi Portofolio
+            profilRisiko: localStorage.getItem('gammenkeu_risk_profile') || 'moderat',
+            setProfilRisiko(profil) {
+                this.profilRisiko = profil;
+                localStorage.setItem('gammenkeu_risk_profile', profil);
+                this.showToast(`Profil risiko diubah ke ${profil.toUpperCase()}`);
+            },
+
+            // Animation & Transition States
+            newlyAddedTxId: null,
+            isFilterAnimating: false,
 
             // Custom Budget Thresholds per Category
             budgetThresholds: {
@@ -2913,12 +3587,16 @@
             unsubProfile: null,
 
             init() {
+                window.__keuanganAppInstance = this;
+
                 // Apply theme mode directly
                 if (this.theme === 'dark') {
                     document.documentElement.classList.add('dark');
+                    document.documentElement.setAttribute('data-theme', 'dark');
                     if (document.body) document.body.classList.add('dark');
                 } else {
                     document.documentElement.classList.remove('dark');
+                    document.documentElement.setAttribute('data-theme', 'light');
                     if (document.body) document.body.classList.remove('dark');
                 }
 
@@ -2935,10 +3613,34 @@
                     this.authState = 'setup_required';
                 }
 
-                this.$watch('searchTransaksi', () => this.selectedTx = []);
-                this.$watch('filterBulan', () => this.selectedTx = []);
-                this.$watch('filterJenis', () => this.selectedTx = []);
-                this.$watch('filterKategori', () => this.selectedTx = []);
+                this.$watch('searchTransaksi', () => {
+                    this.selectedTx = [];
+                    this.isFilterAnimating = true;
+                    setTimeout(() => { this.isFilterAnimating = false; }, 220);
+                });
+                this.$watch('filterBulan', () => {
+                    this.selectedTx = [];
+                    this.isFilterAnimating = true;
+                    setTimeout(() => { this.isFilterAnimating = false; }, 220);
+                });
+                this.$watch('filterJenis', () => {
+                    this.selectedTx = [];
+                    this.isFilterAnimating = true;
+                    setTimeout(() => { this.isFilterAnimating = false; }, 220);
+                });
+                this.$watch('filterKategori', () => {
+                    this.selectedTx = [];
+                    this.isFilterAnimating = true;
+                    setTimeout(() => { this.isFilterAnimating = false; }, 220);
+                });
+
+                this.$watch('investasiList', () => {
+                    if (this.activeTab === 'investasi') {
+                        this.$nextTick(() => {
+                            setTimeout(() => this.renderPortfolioChart(), 50);
+                        });
+                    }
+                });
 
                 this.$watch('activeTab', (newTab) => {
                     if (newTab === 'dashboard') {
@@ -2948,6 +3650,10 @@
                     } else if (newTab === 'histori') {
                         this.$nextTick(() => {
                             setTimeout(() => this.renderRechartsChart(), 70);
+                        });
+                    } else if (newTab === 'investasi') {
+                        this.$nextTick(() => {
+                            setTimeout(() => this.renderPortfolioChart(), 70);
                         });
                     }
                 });
@@ -2969,6 +3675,8 @@
                         this.renderPieChartDashboard();
                     } else if (this.activeTab === 'histori') {
                         this.renderRechartsChart();
+                    } else if (this.activeTab === 'investasi') {
+                        this.renderPortfolioChart();
                     }
                 });
 
@@ -3110,7 +3818,15 @@
                     this.$nextTick(() => {
                         setTimeout(() => this.renderRechartsChart(), 70);
                     });
+                } else if (tabId === 'investasi') {
+                    this.$nextTick(() => {
+                        setTimeout(() => this.renderPortfolioChart(), 70);
+                    });
                 }
+            },
+
+            renderPortfolioChart() {
+                renderPortfolioChart();
             },
 
             bukaFormCepat(jenis) {
@@ -3441,13 +4157,21 @@
                     keterangan: this.formTransaksi.keterangan || ''
                 };
 
+                let createdId = null;
                 if (this.isDemoMode || !this.user || !db) {
-                    const newEntry = { id: 'tx-' + Date.now(), ...payload };
+                    createdId = 'tx-' + Date.now();
+                    const newEntry = { id: createdId, ...payload };
                     this.transaksi = [newEntry, ...this.transaksi];
                     this.saveLocalData();
                 } else {
-                    await addDoc(collection(db, 'artifacts', appId, 'users', this.user.uid, 'transaksi'), payload);
+                    const docRef = await addDoc(collection(db, 'artifacts', appId, 'users', this.user.uid, 'transaksi'), payload);
+                    createdId = docRef.id;
                 }
+
+                this.newlyAddedTxId = createdId;
+                setTimeout(() => {
+                    if (this.newlyAddedTxId === createdId) this.newlyAddedTxId = null;
+                }, 2500);
 
                 this.filterBulan = this.formTransaksi.tanggal.substring(0, 7);
                 this.formTransaksi.jumlah = '';
@@ -3482,6 +4206,9 @@
                     }
                 }
                 this.resetFormInvestasi();
+                this.$nextTick(() => {
+                    if (this.activeTab === 'investasi') this.renderPortfolioChart();
+                });
             },
 
             async tambahRencana() {
@@ -3619,14 +4346,17 @@
                 localStorage.setItem('gammenkeu_theme', this.theme);
                 if (this.theme === 'dark') {
                     document.documentElement.classList.add('dark');
+                    document.documentElement.setAttribute('data-theme', 'dark');
                     if (document.body) document.body.classList.add('dark');
                 } else {
                     document.documentElement.classList.remove('dark');
+                    document.documentElement.setAttribute('data-theme', 'light');
                     if (document.body) document.body.classList.remove('dark');
                 }
                 this.$nextTick(() => {
                     if (this.activeTab === 'dashboard') this.renderPieChartDashboard();
                     if (this.activeTab === 'histori') this.renderRechartsChart();
+                    if (this.activeTab === 'investasi') this.renderPortfolioChart();
                 });
                 this.showToast(this.theme === 'dark' ? 'Mode Gelap diaktifkan' : 'Mode Terang diaktifkan');
             },
@@ -3748,6 +4478,9 @@
 
                 this.showConfirmModal = false;
                 this.hapusTarget = null;
+                this.$nextTick(() => {
+                    if (this.activeTab === 'investasi') this.renderPortfolioChart();
+                });
             },
 
             // Export to Excel (.xlsx) using SheetJS
@@ -3945,7 +4678,7 @@
                 const barBox = document.getElementById('pdf-bar-chart-box');
 
                 if (pieBox) {
-                    renderPdfPieChart(pieBox, this.alokasiPengeluaranKategori);
+                    renderPdfPieChart(pieBox, this.dataPeriodePDF.alokasiKategori);
                 }
 
                 if (barBox) {
@@ -4037,8 +4770,13 @@
                         }
                     }
 
-                    const blnName = this.filterBulan || new Date().toISOString().slice(0, 7);
-                    pdf.save(`Laporan_Keuangan_GamMenkeu_${blnName}.pdf`);
+                    const filenamePeriode = (this.pdfOptions && this.pdfOptions.mode === 'rentang' && this.pdfOptions.startDate && this.pdfOptions.endDate)
+                        ? `${this.pdfOptions.startDate}_sd_${this.pdfOptions.endDate}`
+                        : (this.pdfOptions && this.pdfOptions.bulan) || this.filterBulan || new Date().toISOString().slice(0, 7);
+                    const safeKat = (this.pdfOptions && this.pdfOptions.kategori && this.pdfOptions.kategori !== 'semua')
+                        ? `_${this.pdfOptions.kategori.replace(/[^a-zA-Z0-9]/g, '_')}`
+                        : '';
+                    pdf.save(`Laporan_Keuangan_GamMenkeu_${filenamePeriode}${safeKat}.pdf`);
                 } catch (err) {
                     console.error('Error generating PDF:', err);
                     alert('Gagal mengunduh laporan PDF: ' + (err.message || 'Terjadi kesalahan sistem.'));
@@ -4316,6 +5054,87 @@
                 });
             },
 
+            get statusKuotaAnggaranKategori() {
+                if (!this.budgetThresholds) return [];
+                const res = [];
+                const catSpentMap = {};
+
+                // Hitung pengeluaran per kategori pada bulan/periode aktif (transaksiTampil)
+                this.transaksiTampil.forEach(t => {
+                    if (t.jenis === 'pengeluaran' && t.kategori) {
+                        const kat = t.kategori.trim();
+                        catSpentMap[kat] = (catSpentMap[kat] || 0) + (parseFloat(t.jumlah) || 0);
+                    }
+                });
+
+                Object.keys(this.budgetThresholds).forEach(kategori => {
+                    const batas = parseFloat(this.budgetThresholds[kategori]);
+                    if (!batas || batas <= 0) return;
+
+                    const terpakai = catSpentMap[kategori] || 0;
+                    const persen = parseFloat(((terpakai / batas) * 100).toFixed(1));
+                    const sisa = batas - terpakai;
+                    const isOver = terpakai > batas;
+                    
+                    let statusColor = 'emerald';
+                    let statusBadge = 'Aman';
+                    let barColor = 'bg-emerald-500';
+                    let badgeClass = 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800';
+
+                    if (persen >= 100) {
+                        statusColor = 'rose';
+                        statusBadge = 'Melebihi Kuota';
+                        barColor = 'bg-rose-600 animate-pulse';
+                        badgeClass = 'bg-rose-600 text-white border-rose-700';
+                    } else if (persen >= 85) {
+                        statusColor = 'rose';
+                        statusBadge = 'Kritis (' + persen + '%)';
+                        barColor = 'bg-rose-500';
+                        badgeClass = 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800';
+                    } else if (persen >= 65) {
+                        statusColor = 'amber';
+                        statusBadge = 'Waspada (' + persen + '%)';
+                        barColor = 'bg-amber-500';
+                        badgeClass = 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800';
+                    } else {
+                        statusBadge = 'Aman (' + persen + '%)';
+                    }
+
+                    res.push({
+                        kategori,
+                        batas,
+                        terpakai,
+                        persen,
+                        progressWidth: Math.min(persen, 100),
+                        sisa: Math.abs(sisa),
+                        isOver,
+                        statusColor,
+                        statusBadge,
+                        barColor,
+                        badgeClass,
+                        icon: this.getCategoryIcon(kategori)
+                    });
+                });
+
+                // Urutkan dari persentase penggunaan tertinggi
+                return res.sort((a, b) => b.persen - a.persen);
+            },
+
+            get ringkasanKuotaAnggaran() {
+                const list = this.statusKuotaAnggaranKategori;
+                const totalBatas = list.reduce((sum, item) => sum + item.batas, 0);
+                const totalTerpakai = list.reduce((sum, item) => sum + item.terpakai, 0);
+                const sisa = totalBatas - totalTerpakai;
+                const rasio = totalBatas > 0 ? ((totalTerpakai / totalBatas) * 100).toFixed(1) : 0;
+                return {
+                    totalBatas,
+                    totalTerpakai,
+                    sisa: Math.abs(sisa),
+                    isOver: totalTerpakai > totalBatas,
+                    rasio
+                };
+            },
+
             get activeBudgetWarnings() {
                 return this.peringatanAnggaranKategori.filter(w => !w.isDismissed);
             },
@@ -4347,6 +5166,24 @@
                     'Tabungan/Investasi': 'fa-piggy-bank'
                 };
                 return map[cat] || 'fa-tag';
+            },
+
+            getCategoryColor(cat) {
+                const colorMap = {
+                    'Makanan': '#f97316',
+                    'Transportasi': '#0284c7',
+                    'Tagihan': '#e11d48',
+                    'Tempat Tinggal': '#6366f1',
+                    'Hiburan': '#ec4899',
+                    'Belanja': '#8b5cf6',
+                    'Usaha': '#059669',
+                    'Investasi': '#10b981',
+                    'Tabungan/Investasi': '#10b981',
+                    'Gaji': '#059669',
+                    'Bonus': '#d97706',
+                    'Lainnya': '#64748b'
+                };
+                return colorMap[cat] || '#64748b';
             },
 
             // Computed Getters
@@ -4530,6 +5367,158 @@
             getPersentaseReturn() {
                 if (this.totalModalInvestasi === 0) return "0.0%";
                 return (((this.totalNilaiInvestasi - this.totalModalInvestasi) / this.totalModalInvestasi) * 100).toFixed(1) + "%";
+            },
+
+            get saranProfilRisiko() {
+                const profil = this.profilRisiko || 'moderat';
+                if (profil === 'konservatif') {
+                    return {
+                        targetHorizon: 'Horizon 1 - 3 Tahun (Toleransi Risiko Rendah)',
+                        targetReturn: '5% - 8% / tahun',
+                        deskripsi: 'Fokus utama adalah pelestarian nilai modal riil dan ketersediaan kas likuid. Fluktuasi nilai pasar ditekan serendah mungkin untuk menjaga keamanan dana pokok.',
+                        alokasi: [
+                            { kelas: 'Pasar Uang', persen: 50, color: '#0284c7', contoh: 'Deposito & Reksadana Pasar Uang' },
+                            { kelas: 'Obligasi / SBN', persen: 35, color: '#10b981', contoh: 'SBN Ritel, Sukuk Tabungan, ORI' },
+                            { kelas: 'Saham / Ekuitas', persen: 10, color: '#8b5cf6', contoh: 'Saham Bluechip / Indeks LQ45' },
+                            { kelas: 'Emas / Logam Mulia', persen: 5, color: '#f59e0b', contoh: 'Emas Batangan / Pegadaian' }
+                        ],
+                        rekomendasiAksi: 'Alokasikan porsi dominan (85%) pada instrumen pasar uang dan surat berharga negara (SBN) untuk mengamankan pendapatan pasif kupon/bunga yang stabil. Batasi saham maksimal 10% agar nilai pokok portofolio tetap terjaga saat bursa mengalami koreksi.'
+                    };
+                } else if (profil === 'agresif') {
+                    return {
+                        targetHorizon: 'Horizon > 5 Tahun (Pertumbuhan Maksimal / Volatilitas Tinggi)',
+                        targetReturn: '> 15% / tahun',
+                        deskripsi: 'Toleransi tinggi terhadap fluktuasi nilai pasar jangka pendek demi mengincar potensi capital gain dan akumulasi modal eksponensial dalam jangka panjang.',
+                        alokasi: [
+                            { kelas: 'Saham Pertumbuhan', persen: 70, color: '#8b5cf6', contoh: 'Saham Growth, Reksadana Saham, ETF' },
+                            { kelas: 'Obligasi / Campuran', persen: 15, color: '#10b981', contoh: 'Reksadana Campuran & Obligasi' },
+                            { kelas: 'Aset Alternatif / Kripto', persen: 10, color: '#f43f5e', contoh: 'Bitcoin, Aset Digital, Venture' },
+                            { kelas: 'Kas / Pasar Uang', persen: 5, color: '#0284c7', contoh: 'Kas Darurat Investasi' }
+                        ],
+                        rekomendasiAksi: 'Tempatkan 70% dana pada instrumen saham bertumbuh dengan fundamental bisnis unggul. Batasi porsi aset alternatif/kripto pada ambang aman 10%, serta lakukan rebalancing berkala setiap semester untuk mengamankan keuntungan (take-profit).'
+                    };
+                } else {
+                    // moderat (default)
+                    return {
+                        targetHorizon: 'Horizon 3 - 5 Tahun (Keseimbangan Risiko & Imbal Hasil)',
+                        targetReturn: '9% - 15% / tahun',
+                        deskripsi: 'Keseimbangan ideal antara pertumbuhan modal optimal dan perlindungan nilai aset dari inflasi melalui kombinasi instrumen pendapatan tetap dan ekuitas bertumbuh.',
+                        alokasi: [
+                            { kelas: 'Saham / Ekuitas', persen: 45, color: '#8b5cf6', contoh: 'Reksadana Saham, Saham Dividen, ETF' },
+                            { kelas: 'Obligasi / SBN', persen: 35, color: '#10b981', contoh: 'Obligasi Korporasi & SBN Ritel' },
+                            { kelas: 'Pasar Uang / Kas', persen: 12, color: '#0284c7', contoh: 'Reksadana Pasar Uang Likuid' },
+                            { kelas: 'Emas / Alternatif', persen: 8, color: '#f59e0b', contoh: 'Emas Fisik Lindung Nilai Inflasi' }
+                        ],
+                        rekomendasiAksi: 'Pertahankan komposisi 45% saham untuk menangkap momentum pertumbuhan pasar dan 35% obligasi untuk bantalan arus kas kupon berkala. Selalu sisakan 12% kas likuid untuk memanfaatkan peluang saat harga saham sedang terkoreksi.'
+                    };
+                }
+            },
+
+            // Kustomisasi Periode & Kategori Laporan PDF (Rentang Tanggal Spesifik / Per Bulan & Kategori Pilihan)
+            get labelPeriodePDF() {
+                if (this.pdfOptions && this.pdfOptions.mode === 'rentang' && this.pdfOptions.startDate && this.pdfOptions.endDate) {
+                    const d1 = new Date(this.pdfOptions.startDate);
+                    const d2 = new Date(this.pdfOptions.endDate);
+                    return `${d1.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })} s/d ${d2.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}`;
+                }
+                const b = (this.pdfOptions && this.pdfOptions.bulan) || this.filterBulan || new Date().toISOString().slice(0, 7);
+                const [y, m] = b.split('-');
+                return new Date(parseInt(y), parseInt(m) - 1).toLocaleString('id-ID', { month: 'long', year: 'numeric' });
+            },
+
+            get labelKategoriPDF() {
+                if (this.pdfOptions && this.pdfOptions.kategori && this.pdfOptions.kategori !== 'semua') {
+                    return this.pdfOptions.kategori;
+                }
+                return 'Semua Kategori';
+            },
+
+            get dataPeriodePDF() {
+                let txList = Array.isArray(this.transaksi) ? [...this.transaksi] : [];
+                if (this.pdfOptions && this.pdfOptions.mode === 'rentang' && this.pdfOptions.startDate && this.pdfOptions.endDate) {
+                    txList = txList.filter(t => t.tanggal >= this.pdfOptions.startDate && t.tanggal <= this.pdfOptions.endDate);
+                } else {
+                    const b = (this.pdfOptions && this.pdfOptions.bulan) || this.filterBulan || new Date().toISOString().slice(0, 7);
+                    txList = txList.filter(t => (t.tanggal || '').startsWith(b));
+                }
+
+                // Filter Kategori Transaksi Spesifik jika dipilih
+                if (this.pdfOptions && this.pdfOptions.kategori && this.pdfOptions.kategori !== 'semua') {
+                    txList = txList.filter(t => t.kategori === this.pdfOptions.kategori);
+                }
+
+                // Sort urutan teranyar
+                txList.sort((a, b) => new Date(b.tanggal).getTime() - new Date(a.tanggal).getTime());
+
+                const totalPemasukan = txList.filter(t => t.jenis === 'pemasukan').reduce((s, t) => s + parseFloat(t.jumlah || 0), 0);
+                const totalPengeluaran = txList.filter(t => t.jenis === 'pengeluaran').reduce((s, t) => s + parseFloat(t.jumlah || 0), 0);
+                const saldo = totalPemasukan - totalPengeluaran;
+
+                // Alokasi kategori pengeluaran
+                const katMap = {};
+                txList.filter(t => t.jenis === 'pengeluaran').forEach(t => {
+                    const k = t.kategori || 'Lainnya';
+                    katMap[k] = (katMap[k] || 0) + parseFloat(t.jumlah || 0);
+                });
+                const alokasiKategori = Object.keys(katMap).map(k => ({
+                    name: k,
+                    value: katMap[k],
+                    persentase: totalPengeluaran > 0 ? Math.round((katMap[k] / totalPengeluaran) * 100) : 0,
+                    color: this.getCategoryColor(k)
+                })).sort((a, b) => b.value - a.value);
+
+                // Analisis alokasi 50/30/20
+                const posKebutuhan = ['Makanan', 'Tagihan', 'Tempat Tinggal', 'Transportasi'];
+                const posKeinginan = ['Belanja', 'Hiburan', 'Lainnya'];
+                const posTabungan = ['Tabungan/Investasi'];
+
+                let pengeluaranKebutuhan = 0;
+                let pengeluaranKeinginan = 0;
+                let pengeluaranTabungan = 0;
+
+                txList.filter(t => t.jenis === 'pengeluaran').forEach(t => {
+                    const amount = parseFloat(t.jumlah || 0);
+                    if (posKebutuhan.includes(t.kategori)) pengeluaranKebutuhan += amount;
+                    else if (posKeinginan.includes(t.kategori)) pengeluaranKeinginan += amount;
+                    else if (posTabungan.includes(t.kategori)) pengeluaranTabungan += amount;
+                    else pengeluaranKeinginan += amount;
+                });
+
+                return {
+                    transaksi: txList,
+                    totalPemasukan,
+                    totalPengeluaran,
+                    saldo,
+                    alokasiKategori,
+                    pengeluaranKebutuhan,
+                    pengeluaranKeinginan,
+                    pengeluaranTabungan
+                };
+            },
+
+            bukaModalKustomPdf(kategoriDefault = '') {
+                const today = new Date();
+                const firstDay = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+                const todayStr = today.toISOString().split('T')[0];
+                if (!this.pdfOptions) {
+                    this.pdfOptions = {
+                        mode: 'rentang',
+                        startDate: firstDay,
+                        endDate: todayStr,
+                        bulan: this.filterBulan || new Date().toISOString().slice(0, 7),
+                        kategori: kategoriDefault || 'semua'
+                    };
+                } else {
+                    if (!this.pdfOptions.startDate) this.pdfOptions.startDate = firstDay;
+                    if (!this.pdfOptions.endDate) this.pdfOptions.endDate = todayStr;
+                    if (!this.pdfOptions.bulan) this.pdfOptions.bulan = this.filterBulan || new Date().toISOString().slice(0, 7);
+                    if (kategoriDefault) {
+                        this.pdfOptions.kategori = kategoriDefault;
+                    } else if (!this.pdfOptions.kategori) {
+                        this.pdfOptions.kategori = 'semua';
+                    }
+                }
+                this.showPdfModal = true;
             },
 
             get totalRencanaBelumDibeli() {
