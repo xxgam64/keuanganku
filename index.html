@@ -1959,6 +1959,14 @@
                         </div>
 
                         <div class="flex flex-wrap items-center gap-2.5">
+                            <button @click="bukaModalImporMutasi()"
+                                    type="button"
+                                    class="px-3.5 py-2 text-xs font-semibold text-emerald-800 dark:text-emerald-200 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border border-emerald-200 dark:border-emerald-800 rounded-lg transition-colors flex items-center gap-2 shadow-subtle"
+                                    title="Tempel teks mutasi m-banking Anda atau impor transaksi riil">
+                                <i class="fas fa-file-invoice-dollar text-emerald-600 dark:text-emerald-400"></i>
+                                <span>Tempel / Impor Mutasi Asli</span>
+                            </button>
+
                             <button @click="sinkronkanSemuaRekening()"
                                     :disabled="isSyncingBank || bankAccounts.length === 0"
                                     type="button"
@@ -2717,18 +2725,28 @@
                         </div>
 
                         <!-- Empty State if no accounts -->
-                        <div x-show="bankAccounts.length === 0" class="bg-white dark:bg-slate-900 rounded-xl p-10 text-center border border-dashed border-slate-200 dark:border-slate-800 space-y-3">
+                        <div x-show="bankAccounts.length === 0" class="bg-white dark:bg-slate-900 rounded-xl p-8 sm:p-10 text-center border border-dashed border-slate-200 dark:border-slate-800 space-y-3">
                             <div class="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center mx-auto text-xl">
                                 <i class="fas fa-building-columns"></i>
                             </div>
-                            <h4 class="text-sm font-bold text-slate-900 dark:text-white">Belum Ada Rekening Bank Terhubung</h4>
+                            <h4 class="text-sm font-bold text-slate-900 dark:text-white">Belum Ada Rekening Bank / E-Wallet Terhubung</h4>
                             <p class="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
-                                Hubungkan rekening bank atau e-wallet Anda secara aman untuk memulai sinkronisasi mutasi dan saldo otomatis ke Buku Kas.
+                                Tautkan rekening bank Anda sendiri dengan nama dan nomor rekening riil, atau langsung tempel teks mutasi m-banking Anda untuk dipetakan otomatis ke Buku Kas.
                             </p>
-                            <button @click="bukaModalHubungkanBank()" class="px-4 py-2 bg-slate-900 dark:bg-indigo-600 hover:bg-slate-800 dark:hover:bg-indigo-700 text-white font-medium rounded-lg text-xs transition-colors inline-flex items-center gap-2">
-                                <i class="fas fa-plus text-xs"></i>
-                                <span>Hubungkan Rekening Pertama</span>
-                            </button>
+                            <div class="flex flex-wrap items-center justify-center gap-2 pt-2">
+                                <button @click="bukaModalHubungkanBank()" class="px-4 py-2 bg-slate-900 dark:bg-indigo-600 hover:bg-slate-800 dark:hover:bg-indigo-700 text-white font-medium rounded-lg text-xs transition-colors inline-flex items-center gap-2 shadow-subtle">
+                                    <i class="fas fa-plus text-xs"></i>
+                                    <span>Tautkan Rekening Saya</span>
+                                </button>
+                                <button @click="bukaModalImporMutasi()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg text-xs transition-colors inline-flex items-center gap-2 shadow-subtle">
+                                    <i class="fas fa-paste text-xs"></i>
+                                    <span>Tempel & Impor Mutasi Asli</span>
+                                </button>
+                                <button @click="muatContohAkunDemo()" class="px-3.5 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 font-medium rounded-lg text-xs transition-colors inline-flex items-center gap-1.5" title="Muat akun dummy hanya untuk mencoba fitur sistem">
+                                    <i class="fas fa-flask text-xs"></i>
+                                    <span>Muat Akun Sandbox (Demo)</span>
+                                </button>
+                            </div>
                         </div>
 
                         <!-- Connected Accounts Grid -->
@@ -2748,7 +2766,12 @@
                                                     <div class="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mt-0.5">
                                                         <span x-text="acc.accountType"></span>
                                                         <span>·</span>
-                                                        <span class="font-mono" x-text="acc.accountNumberMasked"></span>
+                                                        <span class="font-mono font-medium" x-text="acc.accountNumberMasked"></span>
+                                                    </div>
+                                                    <div class="text-[11px] text-slate-600 dark:text-slate-300 font-medium flex items-center gap-1 mt-1">
+                                                        <i class="fas fa-user-circle text-indigo-500 text-[10px]"></i>
+                                                        <span>Atas Nama:</span>
+                                                        <span class="font-semibold text-slate-900 dark:text-white" x-text="acc.accountHolder || 'Pemilik Rekening'"></span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -2778,21 +2801,39 @@
                                     </div>
 
                                     <!-- Action Buttons -->
-                                    <div class="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
+                                    <div class="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800 gap-2 flex-wrap">
                                         <button @click="konfirmasiPutusRekening(acc)"
                                                 type="button"
                                                 class="text-xs text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 font-medium transition-colors flex items-center gap-1.5">
                                             <i class="fas fa-unlink text-[10px]"></i>
-                                            <span>Putuskan Tautan</span>
+                                            <span>Putuskan</span>
                                         </button>
 
-                                        <button @click="sinkronkanRekening(acc.id)"
-                                                :disabled="isSyncingBank && syncingBankId === acc.id"
-                                                type="button"
-                                                class="px-3 py-1.5 text-xs font-semibold text-white bg-slate-900 dark:bg-indigo-600 hover:bg-slate-800 dark:hover:bg-indigo-700 rounded-lg transition-colors flex items-center gap-1.5 shadow-subtle disabled:opacity-50">
-                                            <i class="fas" :class="isSyncingBank && syncingBankId === acc.id ? 'fa-spinner fa-spin' : 'fa-arrows-rotate'"></i>
-                                            <span x-text="isSyncingBank && syncingBankId === acc.id ? 'Menyinkronkan...' : 'Sinkronkan Mutasi'"></span>
-                                        </button>
+                                        <div class="flex items-center gap-1.5">
+                                            <button @click="bukaModalEditRekening(acc)"
+                                                    type="button"
+                                                    class="px-2.5 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors flex items-center gap-1.5"
+                                                    title="Ubah nama pemilik, nomor rekening, atau saldo">
+                                                <i class="fas fa-pencil text-[10px]"></i>
+                                                <span>Edit</span>
+                                            </button>
+
+                                            <button @click="bukaModalImporMutasi(acc.id)"
+                                                    type="button"
+                                                    class="px-2.5 py-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border border-emerald-200 dark:border-emerald-800 rounded-lg transition-colors flex items-center gap-1.5"
+                                                    title="Tempel teks mutasi riil m-banking untuk rekening ini">
+                                                <i class="fas fa-paste text-[10px]"></i>
+                                                <span>Tempel Mutasi</span>
+                                            </button>
+
+                                            <button @click="sinkronkanRekening(acc.id)"
+                                                    :disabled="isSyncingBank && syncingBankId === acc.id"
+                                                    type="button"
+                                                    class="px-3 py-1.5 text-xs font-semibold text-white bg-slate-900 dark:bg-indigo-600 hover:bg-slate-800 dark:hover:bg-indigo-700 rounded-lg transition-colors flex items-center gap-1.5 shadow-subtle disabled:opacity-50">
+                                                <i class="fas" :class="isSyncingBank && syncingBankId === acc.id ? 'fa-spinner fa-spin' : 'fa-arrows-rotate'"></i>
+                                                <span x-text="isSyncingBank && syncingBankId === acc.id ? 'Menyinkronkan...' : 'Sinkron API'"></span>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </template>
@@ -3825,15 +3866,15 @@
                         <i class="fas fa-building-columns"></i>
                     </div>
                     <div>
-                        <h3 class="text-sm font-bold text-slate-900 dark:text-white">Otorisasi Rekening Bank</h3>
-                        <p class="text-[11px] text-slate-500 dark:text-slate-400">Plaid & Xendit Open Banking Protocol</p>
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white">Hubungkan Rekening Bank / E-Wallet</h3>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400">Plaid & SNAP BI Open Finance Protocol</p>
                     </div>
                 </div>
                 
                 <!-- Steps badge -->
                 <div class="flex items-center gap-1.5">
-                    <span class="text-[11px] font-semibold text-slate-500 dark:text-slate-400" x-text="'Langkah ' + bankLinkStep + ' dari 4'"></span>
-                    <button type="button" @click="showBankLinkModal = false" :disabled="bankLinkStep === 3" class="w-6 h-6 rounded flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 disabled:opacity-30">
+                    <span class="text-[11px] font-semibold text-slate-500 dark:text-slate-400" x-text="'Langkah ' + bankLinkStep + ' dari 5'"></span>
+                    <button type="button" @click="showBankLinkModal = false" :disabled="bankLinkStep === 4" class="w-6 h-6 rounded flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 disabled:opacity-30">
                         <i class="fas fa-times text-xs"></i>
                     </button>
                 </div>
@@ -3844,14 +3885,14 @@
                 <div>
                     <h4 class="text-xs font-bold text-slate-900 dark:text-white mb-1">Pilih Lembaga Keuangan / Bank Anda</h4>
                     <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                        Pilih bank atau dompet digital yang ingin Anda hubungkan dengan otorisasi baca transaksi otomatis.
+                        Pilih bank atau dompet digital yang ingin Anda tautkan untuk pemantauan saldo dan mutasi kas.
                     </p>
                 </div>
 
                 <!-- Search Input -->
                 <div class="relative">
                     <i class="fas fa-search absolute left-3 top-2.5 text-slate-400 text-xs"></i>
-                    <input type="text" x-model="bankSearchQuery" placeholder="Cari bank atau e-wallet (BCA, Mandiri, BRI, Jago...)"
+                    <input type="text" x-model="bankSearchQuery" placeholder="Cari bank atau e-wallet (BCA, Mandiri, BRI, BNI, Jago, DANA...)"
                            class="w-full pl-8 pr-3 py-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-indigo-500">
                 </div>
 
@@ -3881,11 +3922,11 @@
 
                 <div class="p-2.5 rounded-lg bg-sky-50 dark:bg-sky-950/40 border border-sky-200/60 dark:border-sky-800/60 text-[11px] text-sky-800 dark:text-sky-300 flex items-center gap-2">
                     <i class="fas fa-circle-info text-sky-600 dark:text-sky-400 text-xs shrink-0"></i>
-                    <span>Tersedia integrasi sandbox Plaid Global dan SNAP BI untuk pengujian langsung tanpa biaya.</span>
+                    <span>Tersedia integrasi bank nasional (SNAP BI) dan dompet digital untuk pencatatan riil tanpa rekayasa.</span>
                 </div>
             </div>
 
-            <!-- STEP 2: Keamanan Data & Konsensus Izin (Security & Consent) -->
+            <!-- STEP 2: Input Rincian Rekening Asli Pengguna (Anti-Ngarang) -->
             <div x-show="bankLinkStep === 2" class="space-y-4">
                 <div class="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200/80 dark:border-slate-700/80">
                     <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white text-sm shrink-0"
@@ -3894,7 +3935,88 @@
                     </div>
                     <div>
                         <h4 class="text-xs font-bold text-slate-900 dark:text-white" x-text="getSelectedPartner()?.name"></h4>
-                        <div class="text-[11px] text-slate-500 dark:text-slate-400" x-text="'Protokol Otorisasi: ' + getSelectedPartner()?.api"></div>
+                        <div class="text-[11px] text-slate-500 dark:text-slate-400" x-text="'Kategori: ' + getSelectedPartner()?.type"></div>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-900 dark:text-white mb-1">
+                            Nama Pemilik Rekening / Akun (Atas Nama) <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="text" x-model="bankLinkForm.accountHolder"
+                               placeholder="Contoh: Budi Santoso / Nama Anda"
+                               required
+                               class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500">
+                        <span class="text-[10px] text-slate-400 mt-1 block">Pastikan nama sesuai dengan identitas akun rekening Anda.</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-900 dark:text-white mb-1">
+                                Nomor Rekening / No. HP E-Wallet <span class="text-rose-500">*</span>
+                            </label>
+                            <input type="text" x-model="bankLinkForm.accountNumber"
+                                   placeholder="Contoh: 5410123456"
+                                   required
+                                   class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-mono text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-900 dark:text-white mb-1">
+                                Jenis Rekening / Dompet
+                            </label>
+                            <input type="text" x-model="bankLinkForm.accountType"
+                                   placeholder="Tabungan Tahapan / BritAma / E-Wallet"
+                                   class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-900 dark:text-white mb-1">
+                                Saldo Awal Riil Terkini (Rp)
+                            </label>
+                            <input type="number" x-model="bankLinkForm.balance"
+                                   placeholder="Contoh: 2500000"
+                                   min="0"
+                                   class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-mono text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-900 dark:text-white mb-1">
+                                Catatan / Label Alias (Opsional)
+                            </label>
+                            <input type="text" x-model="bankLinkForm.alias"
+                                   placeholder="Contoh: Rekening Gaji Utama"
+                                   class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-center pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <button type="button" @click="bankLinkStep = 1" class="px-3.5 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
+                        <i class="fas fa-arrow-left mr-1"></i> Ganti Bank
+                    </button>
+                    <button type="button"
+                            @click="if(!bankLinkForm.accountHolder.trim() || !bankLinkForm.accountNumber.trim()) { showToast('⚠️ Harap isi Nama Pemilik dan Nomor Rekening akun Anda.'); return; } bankLinkStep = 3"
+                            class="px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-colors shadow-subtle flex items-center gap-2">
+                        <span>Lanjut ke Konsensus Keamanan</span>
+                        <i class="fas fa-arrow-right text-[10px]"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- STEP 3: Keamanan Data & Konsensus Izin (Security & Consent) -->
+            <div x-show="bankLinkStep === 3" class="space-y-4">
+                <div class="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200/80 dark:border-slate-700/80">
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white text-sm shrink-0"
+                         :style="`background-color: ${getSelectedPartner()?.color}`">
+                        <i class="fas" :class="getSelectedPartner()?.logo"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-bold text-slate-900 dark:text-white" x-text="getSelectedPartner()?.name"></h4>
+                        <div class="text-[11px] text-slate-500 dark:text-slate-400" x-text="'Pemilik: ' + (bankLinkForm.accountHolder || '-') + ' (' + (bankLinkForm.accountNumber || '-') + ')'"></div>
                     </div>
                 </div>
 
@@ -3938,18 +4060,18 @@
                 </div>
 
                 <div class="flex justify-between items-center pt-2">
-                    <button type="button" @click="bankLinkStep = 1" class="px-3.5 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
-                        <i class="fas fa-arrow-left mr-1"></i> Kembali
+                    <button type="button" @click="bankLinkStep = 2" class="px-3.5 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
+                        <i class="fas fa-arrow-left mr-1"></i> Rincian Akun
                     </button>
                     <button type="button" @click="prosesOtorisasiToken()" class="px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-colors shadow-subtle flex items-center gap-2">
-                        <span>Setujui & Lanjutkan Handshake Token</span>
+                        <span>Setujui & Hubungkan Rekening Saya</span>
                         <i class="fas fa-arrow-right text-[10px]"></i>
                     </button>
                 </div>
             </div>
 
-            <!-- STEP 3: Handshake Otorisasi Token 256-bit TLS (Animasi Loading Handshake) -->
-            <div x-show="bankLinkStep === 3" class="py-8 text-center space-y-4">
+            <!-- STEP 4: Handshake Otorisasi Token 256-bit TLS (Animasi Loading Handshake) -->
+            <div x-show="bankLinkStep === 4" class="py-8 text-center space-y-4">
                 <div class="relative w-16 h-16 mx-auto flex items-center justify-center">
                     <div class="absolute inset-0 rounded-full border-4 border-slate-200 dark:border-slate-800"></div>
                     <div class="absolute inset-0 rounded-full border-4 border-indigo-600 border-t-transparent animate-spin"></div>
@@ -3979,47 +4101,132 @@
                 </div>
             </div>
 
-            <!-- STEP 4: Otorisasi Berhasil & Tautan Aktif -->
-            <div x-show="bankLinkStep === 4" class="py-4 text-center space-y-4">
+            <!-- STEP 5: Otorisasi Berhasil & Tautan Aktif -->
+            <div x-show="bankLinkStep === 5" class="py-4 text-center space-y-4">
                 <div class="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-2xl mx-auto border border-emerald-200 dark:border-emerald-800 shadow-subtle">
                     <i class="fas fa-circle-check"></i>
                 </div>
 
                 <div>
-                    <h4 class="text-base font-bold text-slate-900 dark:text-white">Rekening Berhasil Terhubung!</h4>
+                    <h4 class="text-base font-bold text-slate-900 dark:text-white">Rekening Anda Berhasil Terhubung!</h4>
                     <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                        Otorisasi token read-only telah aktif dan siap disinkronkan secara otomatis.
+                        Akun telah tersimpan di Buku Kas dengan data riil Anda dan siap dikelola.
                     </p>
                 </div>
 
-                <div class="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200/80 dark:border-slate-700 text-left text-xs space-y-2">
+                <div class="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200/80 dark:border-slate-700 text-left text-xs space-y-2">
                     <div class="flex justify-between items-center">
                         <span class="text-slate-500 dark:text-slate-400">Institusi Bank:</span>
                         <span class="font-bold text-slate-900 dark:text-white" x-text="justLinkedAccount?.bankName"></span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-500 dark:text-slate-400">Atas Nama Pemilik:</span>
+                        <span class="font-semibold text-slate-900 dark:text-white" x-text="justLinkedAccount?.accountHolder"></span>
                     </div>
                     <div class="flex justify-between items-center">
                         <span class="text-slate-500 dark:text-slate-400">Nomor Rekening:</span>
                         <span class="font-mono font-bold text-slate-900 dark:text-white" x-text="justLinkedAccount?.accountNumberMasked"></span>
                     </div>
                     <div class="flex justify-between items-center">
-                        <span class="text-slate-500 dark:text-slate-400">Saldo Awal Terbaca:</span>
+                        <span class="text-slate-500 dark:text-slate-400">Saldo Awal Terdaftar:</span>
                         <span class="font-mono font-bold text-emerald-600 dark:text-emerald-400" x-text="formatRupiah(justLinkedAccount?.balance)"></span>
-                    </div>
-                    <div class="flex justify-between items-center border-t border-slate-200/60 dark:border-slate-700/60 pt-2">
-                        <span class="text-slate-500 dark:text-slate-400">Token Masked:</span>
-                        <span class="font-mono text-slate-700 dark:text-slate-300" x-text="justLinkedAccount?.tokenAuth?.tokenMasked"></span>
                     </div>
                 </div>
 
-                <div class="pt-2 flex justify-end gap-2">
+                <div class="pt-2 flex flex-col sm:flex-row gap-2">
                     <button type="button"
-                            @click="selesaiTautkanDanSinkron()"
-                            class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-subtle transition-colors flex items-center justify-center gap-2">
-                        <i class="fas fa-arrows-rotate text-xs"></i>
-                        <span>Selesai & Tarik Mutasi Perdana</span>
+                            @click="showBankLinkModal = false; bukaModalImporMutasi(justLinkedAccount?.id)"
+                            class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-subtle transition-colors flex items-center justify-center gap-2">
+                        <i class="fas fa-paste text-xs"></i>
+                        <span>Tempel Mutasi Asli Sekarang</span>
+                    </button>
+                    <button type="button"
+                            @click="showBankLinkModal = false"
+                            class="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold transition-colors">
+                        Selesai & Tutup
                     </button>
                 </div>
             </div>
+
+        </div>
+    </div>
+
+    <!-- Modal Edit Data Rekening Bank / E-Wallet -->
+    <div x-show="showEditAccountModal" x-cloak
+         class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 overflow-y-auto">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-modal border border-slate-200/80 dark:border-slate-800 my-8 space-y-4"
+             @click.away="showEditAccountModal = false">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-sm border border-indigo-200/60 dark:border-indigo-800">
+                        <i class="fas fa-pencil"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white">Edit Informasi Rekening</h3>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400" x-text="editAccountForm.bankName"></p>
+                    </div>
+                </div>
+                <button type="button" @click="showEditAccountModal = false" class="w-6 h-6 rounded flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                    <i class="fas fa-times text-xs"></i>
+                </button>
+            </div>
+
+            <form @submit.prevent="simpanPerubahanRekening()" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-bold text-slate-900 dark:text-white mb-1">
+                        Nama Pemilik Rekening (Atas Nama)
+                    </label>
+                    <input type="text" x-model="editAccountForm.accountHolder" required
+                           class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-900 dark:text-white mb-1">
+                            Nomor Rekening
+                        </label>
+                        <input type="text" x-model="editAccountForm.accountNumber" required
+                               class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-mono text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-900 dark:text-white mb-1">
+                            Jenis Akun
+                        </label>
+                        <input type="text" x-model="editAccountForm.accountType"
+                               class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-900 dark:text-white mb-1">
+                            Saldo Terkini (Rp)
+                        </label>
+                        <input type="number" x-model="editAccountForm.balance" min="0" required
+                               class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-mono text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-900 dark:text-white mb-1">
+                            Label / Alias
+                        </label>
+                        <input type="text" x-model="editAccountForm.alias"
+                               placeholder="Contoh: Operasional"
+                               class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500">
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <button type="button" @click="showEditAccountModal = false" class="px-3.5 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
+                        Batal
+                    </button>
+                    <button type="submit" class="px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-colors shadow-subtle flex items-center gap-1.5">
+                        <i class="fas fa-check text-xs"></i>
+                        <span>Simpan Perubahan</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 
         </div>
     </div>
@@ -4113,7 +4320,7 @@
                                         <select x-model="item.mappedCategory"
                                                 @change="pelajariKategoriDariUser(item)"
                                                 class="bg-transparent text-[11px] font-semibold text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer">
-                                            <template x-for="cat in (item.type === 'pemasukan' ? ['Gaji', 'Bonus', 'Investasi', 'Usaha', 'Lainnya'] : ['Makanan', 'Transportasi', 'Tagihan', 'Tempat Tinggal', 'Hiburan', 'Belanja', 'Tabungan/Investasi', 'Lainnya'])" :key="cat">
+                                            <template x-for="cat in (item.type === 'pemasukan' ? ['Gaji', 'Bonus', 'Investasi', 'Usaha', 'Lainnya'] : ['Makanan', 'Nongkrong', 'Ngedate', 'Transportasi', 'Tagihan', 'Tempat Tinggal', 'Belanja', 'Hiburan', 'Langganan', 'Kesehatan', 'Pendidikan', 'Self Reward', 'Tabungan/Investasi', 'Lainnya'])" :key="cat">
                                                 <option :value="cat" x-text="cat" class="dark:bg-slate-800"></option>
                                             </template>
                                         </select>
@@ -4167,6 +4374,101 @@
                 </div>
             </div>
 
+        </div>
+    </div>
+
+    <!-- Modal Impor & Tempel Mutasi Rekening Asli (Anti-Ngarang) -->
+    <div x-show="showImportMutationModal" x-cloak
+         class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 overflow-y-auto">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-xl w-full p-6 shadow-modal border border-slate-200/80 dark:border-slate-800 my-8 space-y-4"
+             @click.away="showImportMutationModal = false">
+            <div class="flex items-center justify-between pb-3.5 border-b border-slate-100 dark:border-slate-800">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-sm border border-emerald-200/60 dark:border-emerald-800">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white">Impor & Tempel Mutasi Rekening Asli</h3>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400">Salin riwayat mutasi dari m-banking atau internet banking Anda</p>
+                    </div>
+                </div>
+                <button type="button" @click="showImportMutationModal = false" class="w-6 h-6 rounded flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                    <i class="fas fa-times text-xs"></i>
+                </button>
+            </div>
+
+            <div class="space-y-3.5">
+                <!-- Target Bank Account Selector -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-900 dark:text-white mb-1">
+                        Pilih Rekening Tujuan Buku Kas:
+                    </label>
+                    <select x-model="importMutationForm.targetBankId"
+                            class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 cursor-pointer">
+                        <option value="">Buku Kas Umum (Tanpa Tautan Bank Tertentu)</option>
+                        <template x-for="acc in bankAccounts" :key="acc.id">
+                            <option :value="acc.id" x-text="acc.bankName + ' - ' + (acc.accountHolder || '') + ' (' + acc.accountNumberMasked + ')'" class="dark:bg-slate-800"></option>
+                        </template>
+                    </select>
+                </div>
+
+                <!-- Format Guidance Pills -->
+                <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/80 text-[11px] text-slate-600 dark:text-slate-400 space-y-1.5">
+                    <div class="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                        <i class="fas fa-circle-info text-emerald-500"></i>
+                        <span>Format yang Didukung Secara Otomatis:</span>
+                    </div>
+                    <ul class="list-disc pl-4 space-y-0.5 text-[10.5px] leading-relaxed">
+                        <li><strong>BCA (KlikBCA / myBCA / m-BCA):</strong> Format baris mutasi tanggal, keterangan, nominal, DB/CR.</li>
+                        <li><strong>Mandiri (Livin') / BRI (BRImo) / BNI:</strong> Teks salinan histori transaksi lengkap.</li>
+                        <li><strong>Bank Digital & E-Wallet:</strong> Jago, SeaBank, DANA, GoPay, OVO, ShopeePay.</li>
+                        <li><strong>CSV / Excel / File Teks:</strong> Kolom Tanggal, Keterangan/Uraian, Nominal, Debit/Kredit.</li>
+                    </ul>
+                </div>
+
+                <!-- Textarea for Paste -->
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="block text-xs font-bold text-slate-900 dark:text-white">
+                            Tempel Teks Mutasi Rekening Anda di Bawah:
+                        </label>
+                        <span class="text-[10.5px] text-slate-400 font-mono" x-text="(importMutationForm.rawText || '').length + ' karakter'"></span>
+                    </div>
+                    <textarea x-model="importMutationForm.rawText"
+                              rows="6"
+                              placeholder="Tempel mutasi riil Anda di sini...&#10;Contoh:&#10;04/10 TRSF E-BANKING CR TRANSFER DARI BUDI 500,000.00 CR&#10;04/10 QRIS KOPI KENANGAN 28,000.00 DB&#10;03/10 TRSF E-BANKING DB INDOMARET 85,000.00 DB"
+                              class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-mono text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-emerald-500 leading-relaxed"></textarea>
+                </div>
+
+                <!-- Sample Helper Button -->
+                <div class="flex items-center justify-between">
+                    <button type="button"
+                            @click="importMutationForm.rawText = '04/10 TRSF E-BANKING CR TRANSFER GAJI BULANAN 8,500,000.00 CR\n04/10 QRIS KOPI KENANGAN SENOPATI 28,000.00 DB\n03/10 TRSF E-BANKING DB BELANJA SUPERINDO 185,000.00 DB\n02/10 AUTODEBET PLN POSTPAID 350,000.00 DB\n01/10 TOPUP INVESTASI BIBIT REKSADANA 500,000.00 DB'"
+                            class="text-[11px] text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 font-medium">
+                        <i class="fas fa-lightbulb text-[10px]"></i>
+                        <span>Isi Contoh Format Teks Mutasi</span>
+                    </button>
+                    <button type="button"
+                            @click="importMutationForm.rawText = ''"
+                            x-show="importMutationForm.rawText"
+                            class="text-[11px] text-rose-600 hover:underline">
+                        Bersihkan Teks
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                <button type="button" @click="showImportMutationModal = false" class="px-3.5 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
+                    Batal
+                </button>
+                <button type="button"
+                        @click="prosesImporMutasiTeks()"
+                        :disabled="!importMutationForm.rawText.trim()"
+                        class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-subtle transition-colors flex items-center gap-2 disabled:opacity-50">
+                    <i class="fas fa-wand-magic-sparkles text-xs"></i>
+                    <span>Proses & Petakan Mutasi Otomatis</span>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -5438,18 +5740,54 @@
             showDisconnectModal: false,
             bankToDisconnect: null,
             selectedBankProvider: 'bca',
-            bankLinkStep: 1, // 1: Select Partner, 2: Consent, 3: Token Exchange Simulation, 4: Connected
+            bankLinkStep: 1, // 1: Select Partner, 2: Real Account Details Form, 3: Consent & Security, 4: TLS Handshake, 5: Connected
             bankSearchQuery: '',
             justLinkedAccount: null,
+
+            // Real Account Input Details (No more fake/fabricated accounts!)
+            bankLinkForm: {
+                accountHolder: '',
+                accountNumber: '',
+                accountType: 'Tabungan Reguler',
+                balance: '',
+                alias: ''
+            },
+
+            // Modal Edit Data Rekening
+            showEditAccountModal: false,
+            accountToEdit: null,
+            editAccountForm: {
+                id: '',
+                bankName: '',
+                bankCode: '',
+                accountHolder: '',
+                accountNumber: '',
+                accountType: 'Tabungan',
+                balance: 0,
+                alias: ''
+            },
+
+            // Modal Impor & Tempel Mutasi Teks Riil
+            showImportMutationModal: false,
+            importMutationForm: {
+                targetBankId: '',
+                rawText: '',
+                mode: 'paste'
+            },
+            stagedSourceType: 'api', // 'api' | 'real_import' | 'sandbox'
+
             availableBankPartners: [
                 { id: 'bca', name: 'Bank Central Asia (BCA)', code: 'bca', logo: 'fa-building-columns', color: '#00529C', type: 'Bank Umum', api: 'SNAP BI / Xendit Direct' },
                 { id: 'mandiri', name: 'Bank Mandiri', code: 'mandiri', logo: 'fa-building-columns', color: '#002B49', type: 'Bank Umum', api: 'SNAP BI / Xendit Direct' },
                 { id: 'bri', name: 'Bank Rakyat Indonesia (BRI)', code: 'bri', logo: 'fa-building-columns', color: '#00529C', type: 'Bank BUMN', api: 'SNAP BI / Xendit Direct' },
                 { id: 'bni', name: 'Bank Negara Indonesia (BNI)', code: 'bni', logo: 'fa-building-columns', color: '#F15A24', type: 'Bank BUMN', api: 'SNAP BI / Xendit Direct' },
+                { id: 'bsi', name: 'Bank Syariah Indonesia (BSI)', code: 'bsi', logo: 'fa-building-columns', color: '#00A39D', type: 'Bank Syariah', api: 'SNAP BI / Direct' },
                 { id: 'jago', name: 'Bank Jago', code: 'jago', logo: 'fa-mobile-screen-button', color: '#FF7A00', type: 'Bank Digital', api: 'Open Finance API' },
                 { id: 'seabank', name: 'SeaBank Indonesia', code: 'seabank', logo: 'fa-water', color: '#ED4C2F', type: 'Bank Digital', api: 'Open Finance API' },
+                { id: 'dana', name: 'DANA Indonesia', code: 'dana', logo: 'fa-wallet', color: '#118EEA', type: 'E-Wallet', api: 'DANA Open API' },
                 { id: 'gopay', name: 'GoPay (GoTo Financial)', code: 'gopay', logo: 'fa-wallet', color: '#00AED6', type: 'E-Wallet', api: 'Xendit E-Money API' },
                 { id: 'ovo', name: 'OVO (Bumi Makmur Mandiri)', code: 'ovo', logo: 'fa-wallet', color: '#4C3494', type: 'E-Wallet', api: 'Xendit E-Money API' },
+                { id: 'shopeepay', name: 'ShopeePay', code: 'shopeepay', logo: 'fa-wallet', color: '#EE4D2D', type: 'E-Wallet', api: 'Shopee Open API' },
                 { id: 'plaid_sandbox', name: 'Plaid Global Sandbox (Chase/BoA)', code: 'plaid_sandbox', logo: 'fa-globe', color: '#111111', type: 'Global Open Banking', api: 'Plaid Transactions API v2' }
             ],
             stagedBankTransactions: [],
@@ -5980,11 +6318,48 @@
                     }
                 }
 
-                // 3. Ekstraksi Nama Penerima / Tujuan Transfer (Multi-line & Inline)
+                // 3. Ekstraksi Nama Pengirim (Sender) vs Nama Penerima (Recipient) Secara Akurat
+                let senderName = '';
                 let recipientName = '';
+
+                // Kumpulkan nama akun/rekening pengguna yang terhubung untuk pencocokan pintar
+                const userKnownNames = (this.bankAccounts || []).map(a => (a.accountHolder || '').toLowerCase().trim()).filter(Boolean);
+                if (this.userEmail) {
+                    userKnownNames.push(this.userEmail.split('@')[0].toLowerCase().trim());
+                }
+
+                // 3a. Deteksi Pengirim (Dari Rekening / Sumber Dana / Pengirim)
                 for (let i = 0; i < cleanLines.length; i++) {
                     const line = cleanLines[i];
-                    const m = line.match(/(?:nama\s+penerima|penerima(?:\s+transfer)?|transfer\s+ke|tujuan(?:\s+transfer)?|ke\s+rekening(?:\s+tujuan)?|ke\s+bank|dibayarkan\s+kepada|kepada|penerima\s+dana|diterima\s+oleh|nama\s+akun|atas\s+nama|\ba\/n\b|\ba\.n\b)\s*[:\-]?\s*(.*)$/i);
+                    const sm = line.match(/(?:nama\s+pengirim|pengirim(?:\s+transfer)?|dari\s+rekening(?:\s+asal)?|sumber\s+dana|rekening\s+asal|akun\s+asal|rekening\s+sumber|debet\s+rekening)\s*[:\-]?\s*(.*)$/i);
+                    if (sm) {
+                        let candidate = (sm[1] || '').trim();
+                        let cleanCandidate = candidate.replace(bankKeywords, '').replace(/^[\d\s\-.:]+/, '').replace(/[\d\-.:]+$/, '').trim();
+                        if (cleanCandidate.length >= 3 && !noiseWords.test(cleanCandidate) && !/^\d+$/.test(cleanCandidate)) {
+                            senderName = cleanCandidate;
+                        } else {
+                            for (let j = i + 1; j < Math.min(cleanLines.length, i + 4); j++) {
+                                let next = cleanLines[j].trim();
+                                if (/^(?:penerima|tujuan|ke\s+rekening|nominal|jumlah|rp|total|berita|catatan|tanggal|waktu|no\.?\s*ref)/i.test(next)) break;
+                                if (/^[\d\s\-.]+$/.test(next)) continue;
+                                let cleanNext = next.replace(bankKeywords, '').replace(/^[\d\s\-.:]+/, '').replace(/[\d\-.:]+$/, '').trim();
+                                if (cleanNext.length >= 3 && !noiseWords.test(cleanNext) && !/^(?:berhasil|sukses|selesai|rekening|bank|rp)/i.test(cleanNext) && !/^\d+$/.test(cleanNext)) {
+                                    senderName = cleanNext;
+                                    break;
+                                }
+                            }
+                        }
+                        if (senderName) break;
+                    }
+                }
+
+                // 3b. Deteksi Penerima / Tujuan Transfer (Ke Rekening / Penerima)
+                for (let i = 0; i < cleanLines.length; i++) {
+                    const line = cleanLines[i];
+                    // Lewati baris pengirim/sumber dana agar nama pengirim tidak salah terbaca sebagai penerima
+                    if (/^(?:dari\s+rekening|sumber\s+dana|nama\s+pengirim|pengirim|rekening\s+asal)/i.test(line)) continue;
+
+                    const m = line.match(/(?:nama\s+penerima|penerima(?:\s+transfer)?|transfer\s+ke|tujuan(?:\s+transfer)?|ke\s+rekening(?:\s+tujuan)?|ke\s+bank|dibayarkan\s+kepada|kepada|penerima\s+dana|diterima\s+oleh)\s*[:\-]?\s*(.*)$/i);
                     if (m) {
                         let candidate = (m[1] || '').trim();
                         let cleanCandidate = candidate.replace(bankKeywords, '').replace(/^[\d\s\-.:]+/, '').replace(/[\d\-.:]+$/, '').trim();
@@ -5994,7 +6369,7 @@
                             // Look ahead in subsequent 1-4 lines for multi-line receipts (BCA m-Transfer, Mandiri Livin, BRImo)
                             for (let j = i + 1; j < Math.min(cleanLines.length, i + 5); j++) {
                                 let next = cleanLines[j].trim();
-                                if (/^(?:nominal|jumlah|rp|total|berita|catatan|tanggal|waktu|no\.?\s*ref|biaya)/i.test(next)) break;
+                                if (/^(?:nominal|jumlah|rp|total|berita|catatan|tanggal|waktu|no\.?\s*ref|biaya|pengirim|sumber\s+dana)/i.test(next)) break;
                                 if (/^[\d\s\-.]+$/.test(next)) continue; // skip account numbers
                                 let cleanNext = next.replace(bankKeywords, '').replace(/^[\d\s\-.:]+/, '').replace(/[\d\-.:]+$/, '').trim();
                                 if (cleanNext.length >= 3 && !noiseWords.test(cleanNext) && !/^(?:berhasil|sukses|selesai|rekening|bank|rp)/i.test(cleanNext) && !/^\d+$/.test(cleanNext)) {
@@ -6007,13 +6382,59 @@
                     }
                 }
 
-                // Clean up recipient name artifact words
+                // 3c. Fallback Atas Nama (a/n) dengan verifikasi konteks baris
+                if (!recipientName) {
+                    for (let i = 0; i < cleanLines.length; i++) {
+                        const line = cleanLines[i];
+                        if (/(?:\batas\s+nama\b|\ba\/n\b|\ba\.n\b)\s*[:\-]?\s*(.*)$/i.test(line)) {
+                            const anMatch = line.match(/(?:\batas\s+nama\b|\ba\/n\b|\ba\.n\b)\s*[:\-]?\s*(.*)$/i);
+                            let cand = (anMatch && anMatch[1]) ? anMatch[1].trim() : '';
+                            cand = cand.replace(bankKeywords, '').replace(/^[\d\s\-.:]+/, '').replace(/[\d\-.:]+$/, '').trim();
+                            // Jika ada baris sebelumnya yang menyebut "ke" atau "tujuan"
+                            const prevLine = i > 0 ? cleanLines[i-1] : '';
+                            if (/tujuan|ke\s+rekening|penerima|transfer\s+ke/i.test(prevLine)) {
+                                if (cand.length >= 3 && !noiseWords.test(cand) && !/^\d+$/.test(cand)) {
+                                    recipientName = cand;
+                                    break;
+                                }
+                            } else if (!senderName && /sumber|dari\s+rekening|pengirim/i.test(prevLine)) {
+                                if (cand.length >= 3 && !noiseWords.test(cand) && !/^\d+$/.test(cand)) {
+                                    senderName = cand;
+                                }
+                            } else if (!recipientName && cand.length >= 3 && !noiseWords.test(cand) && !/^\d+$/.test(cand)) {
+                                recipientName = cand;
+                            }
+                        }
+                    }
+                }
+
+                // Bersihkan artefak kata non-nama
                 if (recipientName) {
                     recipientName = recipientName
                         .replace(/\b(?:berhasil|sukses|rekening|tujuan|transfer|individual|domestik|transaksi)\b/gi, '')
                         .replace(/^[\s\-.:,]+|[\s\-.:,]+$/g, '')
                         .trim();
                 }
+                if (senderName) {
+                    senderName = senderName
+                        .replace(/\b(?:berhasil|sukses|rekening|asal|pengirim|transfer|individual|domestik|transaksi)\b/gi, '')
+                        .replace(/^[\s\-.:,]+|[\s\-.:,]+$/g, '')
+                        .trim();
+                }
+
+                // 3d. Resolusi Arah Transaksi Berdasarkan Akun Pengguna yang Dikenal
+                let resolvedIncoming = isIncoming;
+                if (userKnownNames.length > 0) {
+                    const senderIsUser = userKnownNames.some(name => senderName.toLowerCase().includes(name) || name.includes(senderName.toLowerCase()));
+                    const recipientIsUser = userKnownNames.some(name => recipientName.toLowerCase().includes(name) || name.includes(recipientName.toLowerCase()));
+
+                    if (senderIsUser && !recipientIsUser) {
+                        resolvedIncoming = false; // Pengguna adalah pengirim => Pengeluaran
+                    } else if (recipientIsUser && !senderIsUser) {
+                        resolvedIncoming = true; // Pengguna adalah penerima => Pemasukan
+                    }
+                }
+                const actualFlowType = resolvedIncoming ? 'pemasukan' : 'pengeluaran';
 
                 // 4. Deteksi QRIS Merchant
                 const isQRIS = /qris/i.test(fullText);
