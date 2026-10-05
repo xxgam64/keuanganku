@@ -4228,9 +4228,6 @@
         </div>
     </div>
 
-        </div>
-    </div>
-
     <!-- Modal Review & Pemetaan Kategori Mutasi Bank (Smart Category Mapping Review) -->
     <div x-show="showSyncReviewModal" x-cloak
          class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 overflow-y-auto">
@@ -6510,15 +6507,15 @@
                     }
                 }
 
-                // 6. Sintesis Catatan Transaksi Bersih & Akurat (Mengatasi Catatan Ngawur)
+                // 6. Sintesis Catatan Transaksi Bersih & Akurat (Mengatasi Catatan Ngawur & Akun Tertukar)
                 let cleanKeterangan = '';
-                if (isIncoming) {
-                    if (recipientName && transferNote) {
-                        cleanKeterangan = `Transfer Masuk dari ${recipientName} (${transferNote})`;
+                if (actualFlowType === 'pemasukan' || resolvedIncoming) {
+                    if (senderName && transferNote) {
+                        cleanKeterangan = `Transfer Masuk dari ${senderName} (${transferNote})`;
+                    } else if (senderName) {
+                        cleanKeterangan = `Transfer Masuk dari ${senderName}`;
                     } else if (transferNote) {
                         cleanKeterangan = `Transfer Masuk: ${transferNote}`;
-                    } else if (recipientName) {
-                        cleanKeterangan = `Transfer Masuk dari ${recipientName}`;
                     } else {
                         cleanKeterangan = 'Transfer Masuk Rekening';
                     }
@@ -6528,10 +6525,10 @@
                 } else if (isTransfer) {
                     if (recipientName && transferNote) {
                         cleanKeterangan = `Transfer ke ${recipientName} (${transferNote})`;
-                    } else if (transferNote) {
-                        cleanKeterangan = `Transfer: ${transferNote}`;
                     } else if (recipientName) {
                         cleanKeterangan = `Transfer ke ${recipientName}`;
+                    } else if (transferNote) {
+                        cleanKeterangan = `Transfer: ${transferNote}`;
                     } else if (matchedBrand) {
                         cleanKeterangan = `Transfer ke ${matchedBrand.name}`;
                     } else {
@@ -8126,6 +8123,16 @@
 
             pilihBankPartner(partnerId) {
                 this.selectedBankProvider = partnerId;
+                const partner = this.getSelectedPartner();
+                if (partner) {
+                    if (partner.type.includes('E-Wallet')) {
+                        this.bankLinkForm.accountType = 'Akun Dompet Digital';
+                    } else if (partner.type.includes('Syariah')) {
+                        this.bankLinkForm.accountType = 'Tabungan Wadiah / Mudharabah';
+                    } else {
+                        this.bankLinkForm.accountType = 'Tabungan Reguler';
+                    }
+                }
                 this.bankLinkStep = 2;
             },
 
@@ -8133,26 +8140,42 @@
                 this.selectedBankProvider = 'bca';
                 this.bankLinkStep = 1;
                 this.bankSearchQuery = '';
+                const defaultName = (this.userEmail && this.userEmail.includes('@')) 
+                    ? this.userEmail.split('@')[0].replace(/[._]/g, ' ').toUpperCase()
+                    : '';
+                this.bankLinkForm = {
+                    accountHolder: defaultName,
+                    accountNumber: '',
+                    accountType: 'Tabungan Reguler',
+                    balance: '',
+                    alias: ''
+                };
                 this.showBankLinkModal = true;
             },
 
             async prosesOtorisasiToken() {
-                this.bankLinkStep = 3;
-                await new Promise(r => setTimeout(r, 1600));
+                this.bankLinkStep = 4;
+                await new Promise(r => setTimeout(r, 1400));
 
                 const partner = this.getSelectedPartner();
-                const randomAccNum = '•••• ' + Math.floor(1000 + Math.random() * 9000);
+                const rawNum = (this.bankLinkForm.accountNumber || '').trim();
+                const maskedNum = rawNum.length >= 4 
+                    ? ('•••• ' + rawNum.slice(-4)) 
+                    : ('•••• ' + Math.floor(1000 + Math.random() * 9000));
                 const randomTokenHex = Math.random().toString(36).substring(2, 10);
-                const initialBalance = Math.floor(5000000 + Math.random() * 18000000);
+                const initBalance = Number(this.bankLinkForm.balance) || 0;
+                const holder = this.bankLinkForm.accountHolder.trim() || (this.userEmail ? this.userEmail.split('@')[0] : 'Pemilik Rekening');
 
                 const newAccount = {
                     id: 'bank_' + partner.code.toLowerCase() + '_' + Date.now(),
                     bankName: partner.name,
                     bankCode: partner.code.toLowerCase(),
-                    accountType: partner.type,
-                    accountNumberMasked: randomAccNum,
-                    accountHolder: this.userEmail ? this.userEmail.split('@')[0] : 'Pengguna GamMenkeu',
-                    balance: initialBalance,
+                    accountType: this.bankLinkForm.accountType || partner.type,
+                    accountNumberMasked: maskedNum,
+                    accountNumberFull: rawNum,
+                    accountHolder: holder,
+                    balance: initBalance,
+                    alias: this.bankLinkForm.alias || partner.name,
                     currency: 'IDR',
                     provider: partner.api,
                     status: 'connected',
@@ -8169,7 +8192,200 @@
                 this.justLinkedAccount = newAccount;
                 this.bankAccounts.push(newAccount);
                 this.simpanDataRekeningBank();
-                this.bankLinkStep = 4;
+                this.bankLinkStep = 5;
+            },
+
+            // Modal Edit Data Rekening
+            bukaModalEditRekening(acc) {
+                if (!acc) return;
+                this.accountToEdit = acc;
+                this.editAccountForm = {
+                    id: acc.id,
+                    bankName: acc.bankName,
+                    bankCode: acc.bankCode,
+                    accountHolder: acc.accountHolder || '',
+                    accountNumber: acc.accountNumberFull || (acc.accountNumberMasked ? acc.accountNumberMasked.replace(/[^\d]/g, '') : ''),
+                    accountType: acc.accountType || 'Tabungan',
+                    balance: acc.balance || 0,
+                    alias: acc.alias || ''
+                };
+                this.showEditAccountModal = true;
+            },
+
+            simpanPerubahanRekening() {
+                if (!this.accountToEdit) return;
+                const idx = this.bankAccounts.findIndex(a => a.id === this.accountToEdit.id);
+                if (idx !== -1) {
+                    const num = (this.editAccountForm.accountNumber || '').trim();
+                    this.bankAccounts[idx].accountHolder = this.editAccountForm.accountHolder.trim() || 'Pemilik Rekening';
+                    this.bankAccounts[idx].accountType = this.editAccountForm.accountType;
+                    this.bankAccounts[idx].balance = Number(this.editAccountForm.balance) || 0;
+                    if (num) {
+                        this.bankAccounts[idx].accountNumberMasked = '•••• ' + num.slice(-4);
+                        this.bankAccounts[idx].accountNumberFull = num;
+                    }
+                    if (this.editAccountForm.alias) {
+                        this.bankAccounts[idx].alias = this.editAccountForm.alias;
+                    }
+                    this.simpanDataRekeningBank();
+                    this.showToast(`✅ Data rekening ${this.bankAccounts[idx].bankName} berhasil diperbarui.`);
+                }
+                this.showEditAccountModal = false;
+                this.accountToEdit = null;
+            },
+
+            // Modal & Engine Impor Mutasi Teks Riil (Anti-Ngarang)
+            bukaModalImporMutasi(preferredBankId = '') {
+                this.importMutationForm.targetBankId = preferredBankId || (this.bankAccounts[0]?.id || '');
+                this.importMutationForm.rawText = '';
+                this.showImportMutationModal = true;
+            },
+
+            parseMutasiTeks(rawText, targetBankId) {
+                if (!rawText || typeof rawText !== 'string' || !rawText.trim()) return [];
+
+                const lines = rawText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+                const targetAccount = this.bankAccounts.find(a => a.id === targetBankId) || this.bankAccounts[0] || {
+                    id: 'general_bank',
+                    bankName: 'Buku Kas Umum',
+                    bankCode: 'bank'
+                };
+
+                const today = new Date();
+                const curYear = today.getFullYear();
+                const curMonth = String(today.getMonth() + 1).padStart(2, '0');
+                const curDay = String(today.getDate()).padStart(2, '0');
+                const curDateIso = `${curYear}-${curMonth}-${curDay}`;
+
+                const existingDescriptions = new Set(this.transaksi.map(t => (t.keterangan || '').toLowerCase().trim()));
+                const parsedList = [];
+
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i];
+
+                    // Skip header or non-transaction lines
+                    if (/^(?:tanggal|tgl|date|keterangan|uraian|deskripsi|description|debet|kredit|saldo|balance|no\b|nomor)/i.test(line) && line.includes(',')) {
+                        continue;
+                    }
+                    if (/^(?:periode|halaman|rekening|nama\s+nasabah|nomor\s+rekening|saldo\s+awal|saldo\s+akhir|mutasi\s+rekening)/i.test(line)) {
+                        continue;
+                    }
+
+                    // Extract Date
+                    let txDate = curDateIso;
+                    const dateMatch1 = line.match(/\b(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})\b/); // YYYY-MM-DD
+                    const dateMatch2 = line.match(/\b(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})\b/); // DD-MM-YYYY
+                    const dateMatch3 = line.match(/\b(\d{1,2})[/](\d{1,2})\b/); // DD/MM (BCA KlikBCA / m-BCA default)
+                    const dateMatch4 = line.match(/\b(\d{1,2})\s+(jan|feb|mar|apr|mei|may|jun|jul|agu|aug|sep|okt|oct|nov|des|dec)[a-z]*\s*(\d{4})?\b/i);
+
+                    if (dateMatch1) {
+                        txDate = `${dateMatch1[1]}-${String(dateMatch1[2]).padStart(2, '0')}-${String(dateMatch1[3]).padStart(2, '0')}`;
+                    } else if (dateMatch2) {
+                        txDate = `${dateMatch2[3]}-${String(dateMatch2[2]).padStart(2, '0')}-${String(dateMatch2[1]).padStart(2, '0')}`;
+                    } else if (dateMatch4) {
+                        const monthNames = { jan:'01', feb:'02', mar:'03', apr:'04', mei:'05', may:'05', jun:'06', jul:'07', agu:'08', aug:'08', sep:'09', okt:'10', oct:'10', nov:'11', des:'12', dec:'12' };
+                        const mStr = monthNames[dateMatch4[2].toLowerCase().substring(0,3)] || curMonth;
+                        const yStr = dateMatch4[3] || curYear;
+                        txDate = `${yStr}-${mStr}-${String(dateMatch4[1]).padStart(2, '0')}`;
+                    } else if (dateMatch3) {
+                        txDate = `${curYear}-${String(dateMatch3[2]).padStart(2, '0')}-${String(dateMatch3[1]).padStart(2, '0')}`;
+                    }
+
+                    // Extract Flow Type (Debit vs Credit)
+                    let txType = 'pengeluaran'; // default
+                    if (/\b(?:cr|kredit|credit|masuk|\+)\b/i.test(line) && !/\b(?:db|debit|debet|keluar|-)\b/i.test(line)) {
+                        txType = 'pemasukan';
+                    } else if (/\b(?:db|debit|debet|keluar|-)\b/i.test(line)) {
+                        txType = 'pengeluaran';
+                    } else if (/gaji|salary|transfer\s*masuk|diterima\s*dari|bunga|cashback|top\s*up\s*masuk/i.test(line)) {
+                        txType = 'pemasukan';
+                    }
+
+                    // Extract Amount
+                    const amountRegex = /(?:rp|idr)?\s*(\d{1,3}(?:[.,]\d{3})+(?:[.,]\d{2})?|\d{4,})/gi;
+                    let amountMatches = [];
+                    let aMatch;
+                    while ((aMatch = amountRegex.exec(line)) !== null) {
+                        let cleanNum = aMatch[1].replace(/,/g, '.');
+                        if (aMatch[1].includes('.') && !aMatch[1].includes(',')) {
+                            const parts = aMatch[1].split('.');
+                            if (parts.length > 1 && parts.every((p, idx) => idx === 0 || p.length === 3)) {
+                                cleanNum = aMatch[1].replace(/\./g, '');
+                            }
+                        } else if (aMatch[1].includes(',') && aMatch[1].includes('.')) {
+                            cleanNum = aMatch[1].replace(/,/g, '').split('.')[0];
+                        } else if (aMatch[1].includes(',')) {
+                            cleanNum = aMatch[1].replace(/\./g, '').split(',')[0];
+                        }
+                        const val = parseFloat(cleanNum);
+                        if (!isNaN(val) && val > 0 && val < 50000000000) {
+                            amountMatches.push(val);
+                        }
+                    }
+
+                    if (amountMatches.length === 0) continue;
+                    const amount = amountMatches[0];
+
+                    // Clean Description
+                    let desc = line
+                        .replace(/\b(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})\b/g, '')
+                        .replace(/\b(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})\b/g, '')
+                        .replace(/\b(\d{1,2})[/](\d{1,2})\b/g, '')
+                        .replace(/(?:rp|idr)?\s*(\d{1,3}(?:[.,]\d{3})+(?:[.,]\d{2})?|\d{4,})/gi, '')
+                        .replace(/\b(?:cr|db|kredit|debet|credit|debit)\b/gi, '')
+                        .replace(/^[|,\s\-:]+|[|,\s\-:]+$/g, '')
+                        .replace(/\s{2,}/g, ' ')
+                        .trim();
+
+                    if (!desc || desc.length < 2) {
+                        desc = txType === 'pemasukan' ? 'Pemasukan Mutasi Rekening' : 'Pengeluaran Mutasi Rekening';
+                    }
+
+                    const cleanCheck = desc.toLowerCase().trim();
+                    const isDuplicate = Array.from(existingDescriptions).some(d => d.includes(cleanCheck) || cleanCheck.includes(d));
+
+                    if (!isDuplicate) {
+                        const fitId = `${(targetAccount.bankCode || 'MUTASI').toUpperCase()}-IMP-${Date.now().toString(36).toUpperCase()}-${Math.floor(100 + Math.random() * 900)}`;
+                        const mappedCat = this.mapBankTransactionToCategory(desc, txType);
+                        parsedList.push({
+                            fitId,
+                            rawDescription: desc,
+                            amount: amount,
+                            type: txType,
+                            date: txDate,
+                            mappedCategory: mappedCat,
+                            isLearnedRule: this.isCategoryLearned(desc),
+                            userModified: false,
+                            bankId: targetAccount.id,
+                            bankName: targetAccount.bankName
+                        });
+                    }
+                }
+
+                return parsedList;
+            },
+
+            prosesImporMutasiTeks() {
+                const text = this.importMutationForm.rawText;
+                if (!text || !text.trim()) {
+                    this.showToast('⚠️ Silakan tempel teks mutasi bank terlebih dahulu.');
+                    return;
+                }
+                const parsed = this.parseMutasiTeks(text, this.importMutationForm.targetBankId);
+                if (parsed.length === 0) {
+                    this.showToast('⚠️ Format mutasi tidak dikenali atau semua mutasi sudah ada di Buku Kas. Pastikan teks mencakup tanggal, uraian, dan nominal.');
+                    return;
+                }
+
+                this.stagedBankTransactions = parsed;
+                this.selectedStagedTx = parsed.map(p => p.fitId);
+                this.stagedSourceType = 'real_import';
+                const targetAcc = this.bankAccounts.find(a => a.id === this.importMutationForm.targetBankId);
+                this.syncingAccountName = targetAcc ? targetAcc.bankName : 'Impor Mutasi Teks Riil';
+                this.showImportMutationModal = false;
+                this.importMutationForm.rawText = '';
+                this.showSyncReviewModal = true;
+                this.showToast(`🎉 Berhasil membaca ${parsed.length} mutasi riil!`);
             },
 
             selesaiTautkanDanSinkron() {
@@ -9014,35 +9230,49 @@
                 try {
                     const local = localStorage.getItem('gammenkeu_bank_accounts');
                     if (local) {
-                        this.bankAccounts = JSON.parse(local);
+                        const parsed = JSON.parse(local);
+                        // Purge legacy hardcoded fake account "Muhammad Gam" or "acc_bca_8821"
+                        const cleaned = Array.isArray(parsed) 
+                            ? parsed.filter(a => a.id !== 'acc_bca_8821' && a.accountHolder !== 'Muhammad Gam')
+                            : [];
+                        this.bankAccounts = cleaned;
+                        if (cleaned.length !== (parsed ? parsed.length : 0)) {
+                            this.simpanDataRekeningBank();
+                        }
                         return;
                     }
                 } catch(e) {}
 
-                // Default initial connected account for demo and instant user test
+                // By default, start with zero connected accounts (no fabricated account!)
+                this.bankAccounts = [];
+            },
+
+            muatContohAkunDemo() {
                 this.bankAccounts = [
                     {
-                        id: 'acc_bca_8821',
+                        id: 'acc_demo_sandbox',
                         bankName: 'Bank Central Asia (BCA)',
                         bankCode: 'bca',
-                        accountType: 'Tabungan Tahapan',
-                        accountNumberMasked: '•••• 8821',
-                        accountHolder: 'Muhammad Gam',
-                        balance: 14250000,
+                        accountType: 'Tabungan Tahapan (Sandbox)',
+                        accountNumberMasked: '•••• 1234',
+                        accountNumberFull: '1234',
+                        accountHolder: 'Akun Pengujian Sandbox',
+                        balance: 10000000,
                         currency: 'IDR',
-                        provider: 'SNAP BI / Xendit Open Banking',
+                        provider: 'SNAP BI Sandbox',
                         status: 'connected',
                         tokenAuth: {
-                            tokenMasked: 'tok_live_bca_98f2a1e8c',
+                            tokenMasked: 'tok_sandbox_bca_test',
                             tokenScopes: ['transactions:read', 'accounts:read'],
                             encryption: 'AES-256-GCM Tokenized Handshake',
                             expiresAt: new Date(Date.now() + 30 * 86400000).toISOString()
                         },
                         lastSyncedAt: new Date().toISOString(),
-                        syncedCount: 14
+                        syncedCount: 0
                     }
                 ];
                 this.simpanDataRekeningBank();
+                this.showToast('ℹ️ Rekening simulasi sandbox dimuat untuk pengujian.');
             },
 
             simpanDataRekeningBank() {
